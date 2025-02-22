@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../services/api'
 
 interface ProcurementRequest {
   id: number;
@@ -10,6 +10,7 @@ interface ProcurementRequest {
   departmentId: number;
   priorityLevel: 'Low' | 'Medium' | 'High';
   deadlineDate: string;
+  quantity:number;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Returned' | 'Completed';
 }
 
@@ -20,6 +21,7 @@ const Procurement: React.FC = () => {
   const [description, setDescription] = useState('');
   const [priorityLevel, setPriorityLevel] = useState<'Low' | 'Medium' | 'High'>('Medium');
   const [deadlineDate, setDeadlineDate] = useState('');
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     fetchRequests();
@@ -27,7 +29,7 @@ const Procurement: React.FC = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('/api/procurement');
+      const response = await api.get('/api/procurement');
       setRequests(response.data.requests);
     } catch (error) {
       console.error(error);
@@ -44,12 +46,13 @@ const Procurement: React.FC = () => {
     }
 
     try {
-      await axios.post('/api/procurement', {
+      await api.post('/api/procurement', {
         title,
         description,
         departmentId: user?.id,
         priorityLevel,
         deadlineDate,
+        quantity,
       });
 
       toast.success('Procurement request submitted!');
@@ -91,6 +94,18 @@ const Procurement: React.FC = () => {
             className="w-full p-2 border rounded-lg"
             placeholder="Enter request description"
           />
+        </div>
+        <div>
+          <label htmlFor="quantity" className="block text-gray-700">Quantity</label>
+          <input 
+          type="number"
+          id="quantity"
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          className="w-full p-2 border rouded-lg"
+          placeholder="Enter request quantity"
+          min={1}
+           />
         </div>
 
         <div>

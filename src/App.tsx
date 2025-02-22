@@ -12,9 +12,9 @@ import { AuthProvider } from './context/AuthContext';
 
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <Router>
+    <Router> {/* Wrap everything with Router */}
+      <ErrorBoundary>
+        <AuthProvider>
           <div className="flex h-screen bg-gray-100">
             <Sidebar />
             <div className="flex flex-col flex-grow">
@@ -30,9 +30,9 @@ const App: React.FC = () => {
             </div>
           </div>
           <Notification />
-        </Router>
-      </AuthProvider>
-    </ErrorBoundary>
+        </AuthProvider>
+      </ErrorBoundary>
+    </Router>
   );
 };
 

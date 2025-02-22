@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../services/api';
 
 interface InventoryItem {
   id: number;
@@ -24,7 +24,7 @@ const Inventory: React.FC = () => {
 
   const fetchInventory = async () => {
     try {
-      const response = await axios.get('/api/inventory');
+      const response = await api.get('/api/inventory');
       setInventory(response.data.inventory);
     } catch (error) {
       console.error(error);
@@ -41,7 +41,7 @@ const Inventory: React.FC = () => {
     }
 
     try {
-      await axios.post('/api/inventory/transfer', {
+      await api.post('/api/inventory/transfer', {
         itemName: transferItemName,
         quantity: transferQuantity,
         departmentId: targetDepartmentId,

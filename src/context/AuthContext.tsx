@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Must be inside Router
 
   const login = (userData: User) => {
     setUser(userData);
