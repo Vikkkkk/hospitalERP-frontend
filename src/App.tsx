@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Procurement from './pages/Procurement';
 import Inventory from './pages/Inventory';
+import WeComLogin from './pages/WeComLogin'; // ✅ Import WeCom login page
+import WeComCallback from './pages/WeComCallback'; // ✅ Import WeCom callback page
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Notification from './components/Notification';
@@ -12,7 +14,7 @@ import { AuthProvider } from './context/AuthContext';
 
 const App: React.FC = () => {
   return (
-    <Router> {/* Wrap everything with Router */}
+    <Router>
       <ErrorBoundary>
         <AuthProvider>
           <div className="flex h-screen bg-gray-100">
@@ -25,6 +27,8 @@ const App: React.FC = () => {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/procurement" element={<Procurement />} />
                   <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/wecom-login" element={<WeComLogin />} /> {/* ✅ New WeCom login route */}
+                  <Route path="/wecom-callback" element={<WeComCallback />} /> {/* ✅ Handle WeCom login callback */}
                 </Routes>
               </main>
             </div>

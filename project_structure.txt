@@ -1,0 +1,48 @@
+.
+├── README.md
+├── build
+│   ├── favicon.ico
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── package.json
+├── postcss.config.js
+├── project_structure.txt
+├── public
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── src
+│   ├── App.css
+│   ├── App.test.tsx
+│   ├── App.tsx
+│   ├── components
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── Notification.tsx
+│   │   └── Sidebar.tsx
+│   ├── context
+│   │   └── AuthContext.tsx
+│   ├── index.css
+│   ├── index.tsx
+│   ├── logo.svg
+│   ├── pages
+│   │   ├── AdminPanel.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── Inventory.tsx
+│   │   ├── Login.tsx
+│   │   └── Procurement.tsx
+│   ├── react-app-env.d.ts
+│   ├── reportWebVitals.ts
+│   ├── services
+│   │   └── api.ts
+│   └── setupTests.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── yarn.lock
+
+8 directories, 38 files
