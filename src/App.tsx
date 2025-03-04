@@ -29,6 +29,7 @@ const App: React.FC = () => {
                   <Route path="/inventory" element={<Inventory />} />
                   <Route path="/wecom-login" element={<WeComLogin />} /> {/* ✅ New WeCom login route */}
                   <Route path="/wecom-callback" element={<WeComCallback />} /> {/* ✅ Handle WeCom login callback */}
+                  <Route path="/login" element={<Login />} />
                 </Routes>
               </main>
             </div>

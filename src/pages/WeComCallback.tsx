@@ -14,6 +14,7 @@ const WeComCallback = () => {
       alert("您的WeCom账号未绑定，请使用普通登录方式并在个人设置中绑定WeCom账号。");
       navigate("/login");
     } else if (error) {
+        console.log(error);
       alert("WeCom 登录失败，请重试或使用普通登录。");
       navigate("/login?error=wecom_failed");
     } else if (token) {

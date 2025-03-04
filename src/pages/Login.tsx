@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from '../services/api';
-import { QRCodeCanvas } from 'qrcode.react';
+import { useSearchParams } from 'react-router-dom';
 
-// Load environment variables safely
-const WECOM_CORP_ID = process.env.WECOM_CORP_ID
-const WECOM_AGENT_ID = process.env.WECOM_AGENT_ID
-const REDIRECT_URI = encodeURIComponent(process.env.WECOM_REDIRECT_URI || "http://readily-hip-leech.ngrok-free.app/wecom-callback");
-
+const WECOM_CORP_ID = process.env.WECOM_CORP_ID || "ww8ca561daefff3e83";
+const WECOM_AGENT_ID = process.env.WECOM_AGENT_ID || "1000002";
+const REDIRECT_URI = encodeURIComponent(process.env.WECOM_REDIRECT_URI || "http://readily-hip-leech.ngrok-free.app/api/wecom-auth/wecom-callback");
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -16,16 +14,32 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showWeComQR, setShowWeComQR] = useState(false);
-  const [weComUrl, setWeComUrl] = useState("");
+  const [searchParams] = useSearchParams();
+
+  const errorType = searchParams.get('error');
+  const getErrorMessage = (type: string | null) => {
+    switch (type) {
+      case 'unlinked_account':
+        return '您的WeCom账号未绑定，请使用普通登录方式并在个人设置中绑定WeCom账号。';
+      case 'missing_code':
+        return '缺少授权码，请重新尝试扫描二维码登录。';
+      case 'wecom_auth_failed':
+        return 'WeCom 认证失败，请重试或使用普通登录。';
+      case 'internal_error':
+        return '服务器错误，请稍后再试。';
+      default:
+        return null;
+    }
+  };
+
+  const errorMessage = getErrorMessage(errorType);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!username.trim() || !password.trim()) {
       toast.error('请输入用户名和密码');
       return;
     }
-
     try {
       const response = await axios.post('/api/auth/login', { username, password });
       login(response.data.token);
@@ -36,16 +50,8 @@ const Login: React.FC = () => {
   };
 
   const handleWeComLogin = () => {
-    if (!WECOM_CORP_ID || !WECOM_AGENT_ID || !REDIRECT_URI) {
-      toast.error('WeCom 配置错误，请检查环境变量');
-      return;
-    }
-
-    // Set the WeCom login URL
-    setWeComUrl(
-      `https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=${WECOM_CORP_ID}&agentid=${WECOM_AGENT_ID}&redirect_uri=${REDIRECT_URI}&state=secureRandomString`
-    );
-    setShowWeComQR(true);
+    const url = `https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=${WECOM_CORP_ID}&agentid=${WECOM_AGENT_ID}&redirect_uri=${REDIRECT_URI}&state=STATE`;
+    window.location.href = url;
   };
 
   return (
@@ -53,26 +59,16 @@ const Login: React.FC = () => {
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold text-center mb-6">Hospital ERP 登录</h1>
 
-        {showWeComQR ? (
-          // ✅ WeCom Login (QR Code Mode)
-          <div className="flex flex-col items-center">
-            <QRCodeCanvas value={weComUrl} size={200} />
-            <p className="mt-4 text-gray-700">请使用企业微信扫描二维码进行登录</p>
-            <button
-              onClick={() => setShowWeComQR(false)}
-              className="mt-4 w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 transition"
-            >
-              返回普通登录
-            </button>
+        {errorMessage && (
+          <div className="text-red-600 bg-red-100 p-3 rounded-md mb-4 text-center">
+            {errorMessage}
           </div>
-        ) : (
-          // ✅ Normal Login (Username & Password)
+        )}
+          // ✅ Regular Login (Username & Password)
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <div>
-              <label htmlFor="username" className="block text-gray-700">
-                用户名
-              </label>
+              <label htmlFor="username" className="block text-gray-700">用户名</label>
               <input
                 type="text"
                 id="username"
@@ -84,9 +80,7 @@ const Login: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-gray-700">
-                密码
-              </label>
+              <label htmlFor="password" className="block text-gray-700">密码</label>
               <input
                 type="password"
                 id="password"
@@ -111,7 +105,7 @@ const Login: React.FC = () => {
               通过企业微信登录
             </button>
           </form>
-        )}
+        {/* )} */}
       </div>
     </div>
   );
