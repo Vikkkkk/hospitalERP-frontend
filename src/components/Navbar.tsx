@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
       {user && (
         <div className="flex items-center space-x-4">
           <span className="text-gray-600">
-            Logged in as: <strong>{user.name}</strong> ({user.role})
+            Logged in as: <strong>{user.username}</strong> ({user.role})
           </span>
           <button
             onClick={logout}

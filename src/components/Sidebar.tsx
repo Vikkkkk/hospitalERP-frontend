@@ -39,6 +39,16 @@ const Sidebar: React.FC = () => {
         >
           Inventory Management
         </NavLink>
+
+        {/* ✅ New: User Profile Link */}
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `p-2 rounded-lg hover:bg-green-100 transition ${isActive ? 'bg-green-200 font-bold' : 'text-gray-700'}`
+          }
+        >
+          User Profile
+        </NavLink>
       </nav>
     </aside>
   );

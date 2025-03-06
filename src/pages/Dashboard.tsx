@@ -6,7 +6,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome, {user?.name}!</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome, {user?.username}!</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-4 bg-blue-100 rounded-lg">

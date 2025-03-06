@@ -6,6 +6,7 @@ import Procurement from './pages/Procurement';
 import Inventory from './pages/Inventory';
 import WeComLogin from './pages/WeComLogin'; // ✅ Import WeCom login page
 import WeComCallback from './pages/WeComCallback'; // ✅ Import WeCom callback page
+import UserProfile from './pages/UserProfile'
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Notification from './components/Notification';
@@ -30,6 +31,7 @@ const App: React.FC = () => {
                   <Route path="/wecom-login" element={<WeComLogin />} /> {/* ✅ New WeCom login route */}
                   <Route path="/wecom-callback" element={<WeComCallback />} /> {/* ✅ Handle WeCom login callback */}
                   <Route path="/login" element={<Login />} />
+                  <Route path="/profile" element={<UserProfile/>}/>
                 </Routes>
               </main>
             </div>

@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react"; // ✅ Correct import
 import { useNavigate } from "react-router-dom";
 
-const WECOM_CORP_ID = process.env.WECOM_CORP_ID
-const WECOM_AGENT_ID = process.env.WECOM_AGENT_ID
-const REDIRECT_URI = encodeURIComponent(process.env.WECOM_REDIRECT_URI || "https://readily-hip-leech.ngrok-free.app/api/wecom-auth/wecom-callback");
+const WECOM_CORP_ID = process.env.REACT_APP_WECOM_CORP_ID
+const WECOM_AGENT_ID = process.env.REACT_APP_WECOM_AGENT_ID
+const REDIRECT_URI = encodeURIComponent(process.env.REACT_APP_WECOM_REDIRECT_URI || "https://readily-hip-leech.ngrok-free.app/api/wecom-auth/wecom-callback");
 
 
 const WeComLogin = () => {
