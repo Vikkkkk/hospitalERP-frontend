@@ -4,22 +4,23 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../services/api';
 import { toast } from 'react-toastify';
 
-// WeCom OAuth Config
-const WECOM_CORP_ID = process.env.REACT_APP_WECOM_CORP_ID;
-const WECOM_AGENT_ID = process.env.REACT_APP_WECOM_AGENT_ID;
-const BASE_BACKEND_URL = "http://readily-hip-leech.ngrok-free.app/api/wecom-auth";
+// ✅ Ensure environment variables exist with fallbacks
+const WECOM_CORP_ID = process.env.REACT_APP_WECOM_CORP_ID || "";
+const WECOM_AGENT_ID = process.env.REACT_APP_WECOM_AGENT_ID || "";
+const BASE_BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://readily-hip-leech.ngrok-free.app/api/wecom-auth";
 
 const UserProfile: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isUnbinding, setIsUnbinding] = useState(false);
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [wecomUserId, setWecomUserId] = useState<string | null>(null);
 
-  // Detect OAuth mode & capture WeCom UserID
+  // ✅ Detect WeCom OAuth mode & extract UserID
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const mode = urlParams.get('mode');
@@ -32,83 +33,57 @@ const UserProfile: React.FC = () => {
     }
   }, [location.search]);
 
-  // Redirect to WeCom for Authentication with `mode=link`
+  // ✅ Redirect user to WeCom OAuth for binding
   const handleWeComLink = () => {
+    if (!WECOM_CORP_ID || !WECOM_AGENT_ID) {
+      toast.error("企业微信配置缺失，请联系管理员");
+      return;
+    }
+
     const linkRedirectUri = encodeURIComponent(`${BASE_BACKEND_URL}/wecom-callback?mode=link`);
-
-    console.log("WECOM_CORP_ID:", WECOM_CORP_ID);
-    console.log("WECOM_AGENT_ID:", WECOM_AGENT_ID);
-
-    
     const url = `https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=${WECOM_CORP_ID}&agentid=${WECOM_AGENT_ID}&redirect_uri=${linkRedirectUri}&state=STATE`;
+    
     window.location.href = url;
   };
 
-  // Confirm WeCom Linking (Final Step)
+  // ✅ Confirm WeCom Account Linking
   const confirmWeComLink = async () => {
     if (!user) return;
-    
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      toast.error("未找到身份令牌，请重新登录");
-      return;
-    }
-
-    if (!password.trim()) {
-      toast.error("请输入密码");
-      return;
-    }
-
-    if (!wecomUserId) {
-      toast.error("无效的 WeCom 用户ID，请重新扫码");
-      return;
-    }
+    if (!password.trim()) return toast.error("请输入密码");
+    if (!wecomUserId) return toast.error("无效的 WeCom 用户ID，请重新扫码");
 
     try {
       setLoading(true);
+      const token = localStorage.getItem("authToken");
+      if (!token) throw new Error("未找到身份令牌，请重新登录");
 
-      await axios.post(
-        '/api/wecom-auth/link-wecom',
-        { password, wecom_userid: wecomUserId },
+      await axios.post('/api/wecom-auth/link-wecom', 
+        { password, wecom_userid: wecomUserId }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("WeCom 账号绑定成功");
 
-      // ✅ Ensure all properties are set correctly
-      const updatedUser = {
-        ...user,
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        departmentid: user.departmentid,
-        isglobalrole: user.isglobalrole,
-        wecom_userid: wecomUserId, // ✅ Update WeCom ID
-      };
-
+      const updatedUser = { ...user, wecom_userid: wecomUserId };
       updateUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
       setLoading(false);
-      navigate('/profile'); 
+      navigate('/profile');
     } catch (error: any) {
       toast.error(error.response?.data?.message || "绑定失败");
       setLoading(false);
     }
   };
 
-  // ✅ Function to Unbind WeCom Account
+  // ✅ Unbind WeCom Account
   const unbindWeComAccount = async () => {
     if (!user || !user.wecom_userid) return;
 
-    setIsUnbinding(true);
     try {
+      setIsUnbinding(true);
       const token = localStorage.getItem("authToken");
-      if (!token) {
-        toast.error("身份验证失败，请重新登录");
-        logout();
-        return;
-      }
+      if (!token) throw new Error("身份验证失败，请重新登录");
 
       await axios.post('/api/wecom-auth/unlink-wecom', {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -116,17 +91,7 @@ const UserProfile: React.FC = () => {
 
       toast.success("WeCom 账号解绑成功");
 
-      // ✅ Ensure all properties are set correctly
-      const updatedUser = {
-        ...user,
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        departmentid: user.departmentid,
-        isglobalrole: user.isglobalrole,
-        wecom_userid: null, // ✅ Properly unset WeCom ID
-      };
-
+      const updatedUser = { ...user, wecom_userid: null };
       updateUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
@@ -144,7 +109,7 @@ const UserProfile: React.FC = () => {
       <p><strong>用户名:</strong> {user?.username}</p>
       <p><strong>角色:</strong> {user?.role}</p>
 
-      {/* ✅ Display WeCom Account Status */}
+      {/* ✅ WeCom Account Status */}
       {user?.wecom_userid ? (
         <>
           <p className="text-green-600">✅ WeCom 账号已绑定</p>
@@ -165,7 +130,7 @@ const UserProfile: React.FC = () => {
             绑定 WeCom 账号
           </button>
 
-          {/* Show Password Input Only If `mode=confirm` Detected */}
+          {/* ✅ Password Input Only If `mode=confirm` */}
           {showPasswordInput && (
             <div className="mt-4">
               <input

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../services/api';
 
@@ -8,7 +8,7 @@ interface User {
   role: string;
   departmentid?: number;
   isglobalrole?: boolean;
-  wecom_userid?: string | null; // ✅ Ensure it's nullable
+  wecom_userid?: string | null;
 }
 
 interface AuthContextProps {
@@ -16,7 +16,7 @@ interface AuthContextProps {
   login: (token: string, user: User) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
-  updateUser: (updatedUser: User) => void; // ✅ Allows updating user state immediately
+  updateUser: (updatedFields: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -25,30 +25,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
 
-  // ✅ Load user and token from local storage on refresh
+  // ✅ Load user & token from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('authToken');
 
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser: User = JSON.parse(storedUser);
+      setUser(parsedUser);
       axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
     }
   }, []);
 
   // ✅ Function to update user state locally
-  const updateUser = (updatedFields: Partial<User>) => {
+  const updateUser = useCallback((updatedFields: Partial<User>) => {
     setUser((prevUser) => {
-      if (!prevUser) return null; // Ensure there's a user to update
+      if (!prevUser) return null;
 
-      const mergedUser: User = { ...prevUser, ...updatedFields };
-      localStorage.setItem('user', JSON.stringify(mergedUser));
-      return mergedUser;
+      const updatedUser = { ...prevUser, ...updatedFields };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
     });
-  };
+  }, []);
 
   // ✅ Fetch updated user data from backend
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) return;
@@ -57,35 +58,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const updatedUser = response.data.user;
-      if (updatedUser) {
-        updateUser(updatedUser); // ✅ Use updateUser to store new data
+      if (response.data?.user) {
+        updateUser(response.data.user);
       }
     } catch (error) {
       console.error("❌ Failed to refresh user data:", error);
-      logout(); // Logout if session is invalid
+      logout(); // Logout on token failure
     }
-  };
+  }, [updateUser]);
 
   // ✅ Store token and user on login
-  const login = (token: string, userData: User) => {
-    console.log('🔐 Storing new token:', token, "userData:", userData);
+  const login = useCallback((token: string, userData: User) => {
+    console.log('🔐 Storing new token:', token, "User:", userData);
     localStorage.setItem('authToken', token);
     localStorage.setItem('user', JSON.stringify(userData));
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
+    
     setUser(userData);
     navigate('/dashboard');
-  };
+  }, [navigate]);
 
   // ✅ Clear token and user on logout
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     navigate('/');
-  };
+  }, [navigate]);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, refreshUser, updateUser }}>
