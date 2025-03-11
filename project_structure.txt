@@ -1,11 +1,17 @@
 .
+├── Dev_log.md
 ├── README.md
 ├── build
+│   ├── asset-manifest.json
 │   ├── favicon.ico
+│   ├── index.html
 │   ├── logo192.png
 │   ├── logo512.png
 │   ├── manifest.json
-│   └── robots.txt
+│   ├── robots.txt
+│   └── static
+│       ├── css
+│       └── js
 ├── package.json
 ├── postcss.config.js
 ├── project_structure.txt
@@ -22,11 +28,17 @@
 │   ├── App.tsx
 │   ├── components
 │   │   ├── ErrorBoundary.tsx
+│   │   ├── InventoryStats.tsx
+│   │   ├── InventoryTable.tsx
+│   │   ├── InventoryTransactions.tsx
 │   │   ├── Navbar.tsx
 │   │   ├── Notification.tsx
-│   │   └── Sidebar.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── StockRequestForm.tsx
+│   │   └── StockRequestList.tsx
 │   ├── context
-│   │   └── AuthContext.tsx
+│   │   ├── AuthContext.tsx
+│   │   └── InventoryContext.tsx
 │   ├── index.css
 │   ├── index.tsx
 │   ├── logo.svg
@@ -34,15 +46,28 @@
 │   │   ├── AdminPanel.tsx
 │   │   ├── Dashboard.tsx
 │   │   ├── Inventory.tsx
+│   │   ├── InventoryDashboard.tsx
 │   │   ├── Login.tsx
-│   │   └── Procurement.tsx
+│   │   ├── Procurement.tsx
+│   │   ├── RequestStock.tsx
+│   │   ├── UserProfile.tsx
+│   │   ├── WeComCallback.tsx
+│   │   └── WeComLogin.tsx
 │   ├── react-app-env.d.ts
+│   ├── redux
+│   │   ├── actions
+│   │   ├── reducers
+│   │   └── store
 │   ├── reportWebVitals.ts
 │   ├── services
+│   │   ├── AuthService.ts
+│   │   ├── InventoryService.ts
 │   │   └── api.ts
-│   └── setupTests.ts
+│   ├── setupTests.ts
+│   └── types
+│       └── User.ts
 ├── tailwind.config.js
 ├── tsconfig.json
 └── yarn.lock
 
-8 directories, 38 files
+16 directories, 55 files

@@ -1,36 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useInventory } from '../context/InventoryContext';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
 interface InventoryItem {
   id: number;
-  itemName: string;
+  itemname: string;
   quantity: number;
-  departmentId: number | null;
-  minimumStockLevel: number;
+  departmentid: number | null;
+  minimumstocklevel: number;
+}
+
+interface InventoryTransaction {
+  id: number;
+  transactiontype: 'Transfer' | 'Usage' | 'Restocking';
+  quantity: number;
+  performedby: number;
+  createdAt: string;
 }
 
 const Inventory: React.FC = () => {
   const { user } = useAuth();
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const { inventory, fetchInventory, transactions, fetchTransactions } = useInventory();
   const [transferItemName, setTransferItemName] = useState('');
   const [transferQuantity, setTransferQuantity] = useState(0);
   const [targetDepartmentId, setTargetDepartmentId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchInventory();
+    fetchTransactions();
   }, []);
-
-  const fetchInventory = async () => {
-    try {
-      const response = await api.get('/api/inventory');
-      setInventory(response.data.inventory);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to fetch inventory.');
-    }
-  };
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,11 +45,12 @@ const Inventory: React.FC = () => {
       await api.post('/api/inventory/transfer', {
         itemName: transferItemName,
         quantity: transferQuantity,
-        departmentId: targetDepartmentId,
+        departmentid: targetDepartmentId,
       });
 
       toast.success('Stock transferred successfully.');
       fetchInventory();
+      fetchTransactions();
       setTransferItemName('');
       setTransferQuantity(0);
       setTargetDepartmentId(null);
@@ -60,12 +62,12 @@ const Inventory: React.FC = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4">Inventory Management</h1>
+      <h1 className="text-2xl font-bold mb-4">📦 Inventory Management</h1>
 
       {/* Transfer Stock Form */}
       {user?.role === 'Admin' || user?.role === 'WarehouseStaff' ? (
         <form onSubmit={handleTransfer} className="space-y-4 mb-8">
-          <h2 className="text-xl font-semibold mb-2">Transfer Stock</h2>
+          <h2 className="text-xl font-semibold mb-2">🔄 Transfer Stock</h2>
 
           <div>
             <label htmlFor="transferItemName" className="block text-gray-700">Item Name</label>
@@ -113,25 +115,81 @@ const Inventory: React.FC = () => {
       ) : null}
 
       {/* Inventory List */}
-      <h2 className="text-xl font-semibold mb-4">Current Inventory</h2>
+      <h2 className="text-xl font-semibold mb-4">📋 Current Inventory</h2>
       <div className="space-y-4">
         {inventory.length > 0 ? (
           inventory.map((item) => (
             <div key={item.id} className="p-4 bg-gray-100 rounded-lg shadow">
-              <h3 className="font-bold text-lg">{item.itemName}</h3>
+              <h3 className="font-bold text-lg">{item.itemname}</h3>
               <p className="text-gray-700">Quantity: {item.quantity}</p>
               <p className="text-gray-700">
-                Department ID: {item.departmentId !== null ? item.departmentId : 'Main Warehouse'}
+                Department ID: {item.departmentid !== null ? item.departmentid : 'Main Warehouse'}
               </p>
-              <p className="text-gray-700">Minimum Stock Level: {item.minimumStockLevel}</p>
-              {item.quantity < item.minimumStockLevel && (
-                <p className="text-red-500 font-semibold">Low Stock Alert</p>
+              <p className="text-gray-700">Minimum Stock Level: {item.minimumstocklevel}</p>
+              {item.quantity < item.minimumstocklevel && (
+                <p className="text-red-500 font-semibold">⚠ Low Stock Alert</p>
               )}
             </div>
           ))
         ) : (
-          <p className="text-gray-500">No inventory items found.</p>
+          <p className="text-gray-500">❌ No inventory items found.</p>
         )}
+      </div>
+
+      {/* Inventory Transactions */}
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold mb-4">🔄 Inventory Transactions</h2>
+        <div className="overflow-x-auto bg-gray-100 p-4 rounded-lg">
+          <table className="w-full table-auto border-collapse">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="p-3 text-left">🆔 ID</th>
+                <th className="p-3 text-left">🔄 Type</th>
+                <th className="p-3 text-left">📦 Quantity</th>
+                <th className="p-3 text-left">👤 Performed By</th>
+                <th className="p-3 text-left">📅 Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.length > 0 ? (
+                transactions.slice((currentPage - 1) * 5, currentPage * 5).map((txn) => (
+                  <tr key={txn.id} className="border-b">
+                    <td className="p-3">{txn.id}</td>
+                    <td className="p-3">{txn.transactiontype}</td>
+                    <td className="p-3">{txn.quantity}</td>
+                    <td className="p-3">{txn.performedby}</td>
+                    <td className="p-3">{new Date(txn.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-3 text-center text-gray-500">
+                    ❌ No transactions found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-l-lg"
+            disabled={currentPage === 1}
+          >
+            ◀ Previous
+          </button>
+          <span className="px-4 py-2 bg-white border">{currentPage}</span>
+          <button
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-r-lg"
+            disabled={transactions.length < currentPage * 5}
+          >
+            Next ▶
+          </button>
+        </div>
       </div>
     </div>
   );
