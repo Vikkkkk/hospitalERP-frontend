@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   fetchDepartments,
   createDepartment,
@@ -14,23 +14,30 @@ interface DepartmentState {
   error: string | null;
 }
 
+// 🎯 Initial State
 const initialState: DepartmentState = {
   departments: [],
   loading: false,
   error: null,
 };
 
+// 🚀 Create Department Slice
 const departmentSlice = createSlice({
-  name: 'departments',
+  name: 'department',
   initialState,
-  reducers: {},
+  reducers: {
+    clearDepartments: (state) => {
+      state.departments = [];
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchDepartments.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchDepartments.fulfilled, (state, action) => {
+      .addCase(fetchDepartments.fulfilled, (state, action: PayloadAction<Department[]>) => {
         state.loading = false;
         state.departments = action.payload;
       })
@@ -38,21 +45,31 @@ const departmentSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(createDepartment.fulfilled, (state, action) => {
+      // ✅ Handle Create Department
+      .addCase(createDepartment.fulfilled, (state, action: PayloadAction<Department>) => {
         state.departments.push(action.payload);
       })
-      .addCase(assignDepartmentHead.fulfilled, (state, action) => {
-        const index = state.departments.findIndex((d) => d.id === action.payload.id);
-        if (index !== -1) state.departments[index] = action.payload;
+      // ✅ Handle Assign Department Head
+      .addCase(assignDepartmentHead.fulfilled, (state, action: PayloadAction<Department>) => {
+        const index = state.departments.findIndex((dept) => dept.id === action.payload.id);
+        if (index !== -1) {
+          state.departments[index] = action.payload;
+        }
       })
-      .addCase(updateDepartment.fulfilled, (state, action) => {
-        const index = state.departments.findIndex((d) => d.id === action.payload.id);
-        if (index !== -1) state.departments[index].name = action.payload.name;
+      // ✅ Handle Update Department
+      .addCase(updateDepartment.fulfilled, (state, action: PayloadAction<Department>) => {
+        const index = state.departments.findIndex((dept) => dept.id === action.payload.id);
+        if (index !== -1) {
+          state.departments[index] = action.payload;
+        }
       })
+      // ✅ Handle Delete Department
       .addCase(deleteDepartment.fulfilled, (state, action) => {
-        state.departments = state.departments.filter((d) => d.id !== action.meta.arg);
+        state.departments = state.departments.filter((dept) => dept.id !== action.meta.arg);
       });
   },
 });
 
+// 📌 Export Actions & Reducer
+export const { clearDepartments } = departmentSlice.actions;
 export default departmentSlice.reducer;

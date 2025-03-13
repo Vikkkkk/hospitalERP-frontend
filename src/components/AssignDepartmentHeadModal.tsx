@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Select, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { assignDepartmentHead } from '../redux/actions/departmentActions';
-import { fetchUsers } from '../redux/actions/fetchUserActions';
+import { fetchUsers } from '../redux/actions/userActions';
 import { RootState, AppDispatch } from '../redux/store';
 
 interface AssignDepartmentHeadModalProps {
@@ -15,7 +15,7 @@ const AssignDepartmentHeadModal: React.FC<AssignDepartmentHeadModalProps> = ({ d
   const dispatch = useDispatch<AppDispatch>();
 
   // ✅ Corrected Redux state reference
-  const { users, loading } = useSelector((state: RootState) => state.fetchUser);
+  const { users, loading } = useSelector((state: RootState) => state.user);
 
   // ✅ Ensure `users` is not undefined
   const departmentUsers = users?.filter(

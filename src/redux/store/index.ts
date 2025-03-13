@@ -3,7 +3,7 @@ import inventoryReducer from './slices/inventorySlice';
 import inventoryTransactionReducer from './slices/inventoryTransactionSlice';
 import departmentReducer from './slices/departmentSlice'
 import authReducer from './slices/authSlice'; // ✅ Added
-import fetchUserReducer from './slices/fetchUserSlice';
+import userReducer from './slices/userSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,7 +11,7 @@ export const store = configureStore({
     inventoryTransactions: inventoryTransactionReducer,
     department:departmentReducer,
     auth: authReducer, // ✅ Now Redux tracks authentication state
-    fetchUser:fetchUserReducer,
+    user:userReducer,
   },
 });
 

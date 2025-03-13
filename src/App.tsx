@@ -10,7 +10,8 @@ import Inventory from './pages/Inventory';
 import WeComLogin from './pages/WeComLogin';
 import WeComCallback from './pages/WeComCallback';
 import UserProfile from './pages/UserProfile';
-import DepartmentList from './pages/DepartmentList'; // ✅ Import the new page
+import DepartmentList from './pages/DepartmentList';
+import UserManagement from './pages/UserManagement'; // ✅ Import User Management Page
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -66,6 +67,9 @@ const App: React.FC = () => {
 
                 {/* 🔹 Department Management (Only Admin & RootAdmin) */}
                 <Route path="/departments" element={<RoleProtectedRoute element={<DepartmentList />} allowedRoles={['Admin', 'RootAdmin']} />} />
+
+                {/* 🔹 User Management (Only Admin & RootAdmin) */}
+                <Route path="/user-management" element={<RoleProtectedRoute element={<UserManagement />} allowedRoles={['Admin', 'RootAdmin']} />} />
 
                 {/* ✅ Fallback Route */}
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
