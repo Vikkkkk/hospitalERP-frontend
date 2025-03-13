@@ -59,7 +59,7 @@ const UserProfile: React.FC = () => {
       const token = localStorage.getItem("authToken");
       if (!token) throw new Error("未找到身份令牌，请重新登录");
 
-      await axios.post('/api/wecom-auth/link-wecom', 
+      await axios.post('/wecom-auth/link-wecom', 
         { password, wecom_userid: wecomUserId }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -87,7 +87,7 @@ const UserProfile: React.FC = () => {
       const token = localStorage.getItem("authToken");
       if (!token) throw new Error("身份验证失败，请重新登录");
 
-      await axios.post('/api/wecom-auth/unlink-wecom', {}, {
+      await axios.post('/wecom-auth/unlink-wecom', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

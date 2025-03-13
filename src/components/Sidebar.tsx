@@ -21,8 +21,9 @@ const Sidebar: React.FC = () => {
     { to: '/profile', label: '👤 User Profile' },
   ];
 
-  // 🔹 Admin & RootAdmin can access Procurement + Inventory
+  // 🔹 Admin & RootAdmin can access Procurement + Inventory + Department Management
   if (user.role === 'Admin' || user.role === 'RootAdmin') {
+    navigation.push({ to: '/departments', label: '🏢 Department Management' }); // ✅ New
     navigation.push({ to: '/procurement', label: '📑 Procurement Requests' });
     navigation.push({ to: '/inventory', label: '📦 Inventory Management' });
   }
