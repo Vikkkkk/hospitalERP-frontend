@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 
 // Create an Axios instance for API calls
 const api = axios.create({
-  baseURL: 'https://readily-hip-leech.ngrok-free.app', // Replace with your backend URL and port
+  baseURL: 'https://readily-hip-leech.ngrok-free.app/api', // Replace with your backend URL and port
   headers: {
     'Content-Type': 'application/json',
   },

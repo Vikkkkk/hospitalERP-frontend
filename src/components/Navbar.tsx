@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectUser, selectIsAuthenticated } from '../redux/selectors/authSelectors';
+import { logoutUser } from '../redux/actions/authActions';
+import { AppDispatch } from '../redux/store';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faTimes, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 
-
 const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  if (!isAuthenticated) return null; // ✅ Hide Navbar if user isn't logged in
 
   return (
     <nav className="bg-white shadow-md p-4 flex justify-between items-center">
@@ -37,7 +43,7 @@ const Navbar: React.FC = () => {
 
             {/* ✅ Logout Button */}
             <button
-              onClick={logout}
+              onClick={() => dispatch(logoutUser())}
               className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition flex items-center"
             >
              <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" /> Logout
@@ -59,7 +65,7 @@ const Navbar: React.FC = () => {
           </div>
 
           <button
-            onClick={logout}
+            onClick={() => dispatch(logoutUser())}
             className="w-full mt-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition flex items-center justify-center"
           >
             <FontAwesomeIcon icon={faSignOutAlt} className='mr-2'/>

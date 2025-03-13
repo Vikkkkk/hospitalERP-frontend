@@ -1,17 +1,5 @@
 .
-├── Dev_log.md
 ├── README.md
-├── build
-│   ├── asset-manifest.json
-│   ├── favicon.ico
-│   ├── index.html
-│   ├── logo192.png
-│   ├── logo512.png
-│   ├── manifest.json
-│   ├── robots.txt
-│   └── static
-│       ├── css
-│       └── js
 ├── package.json
 ├── postcss.config.js
 ├── project_structure.txt
@@ -56,8 +44,11 @@
 │   ├── react-app-env.d.ts
 │   ├── redux
 │   │   ├── actions
+│   │   ├── constants
 │   │   ├── reducers
-│   │   └── store
+│   │   ├── selectors
+│   │   ├── store
+│   │   └── types
 │   ├── reportWebVitals.ts
 │   ├── services
 │   │   ├── AuthService.ts
@@ -70,4 +61,4 @@
 ├── tsconfig.json
 └── yarn.lock
 
-16 directories, 55 files
+15 directories, 47 files

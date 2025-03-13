@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../redux/actions/authActions';
+import { selectIsAuthenticated } from '../redux/selectors/authSelectors';
+import { AppDispatch } from '../redux/store';
 import { toast } from 'react-toastify';
 import axios from '../services/api';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -11,13 +14,14 @@ const REDIRECT_URI = encodeURIComponent(
 );
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false); // ✅ Added loading state
+  const [loading, setLoading] = useState(false);
 
   const errorType = searchParams.get('error');
   const token = searchParams.get('token');
@@ -32,28 +36,28 @@ const Login: React.FC = () => {
   const errorMessage = errorType ? errorMessages[errorType] : null;
 
   /**
-   * ✅ Automatically log in if token exists in URL
+   * ✅ Auto-login with WeCom token if found in URL
    */
   useEffect(() => {
     if (!token) return;
-    
-    console.log('🔑 WeCom Login: Token found in URL, processing login...');
+
+    console.log('🔑 WeCom Login: Token found, processing login...');
     localStorage.setItem('authToken', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     axios.get('/api/auth/me')
       .then(response => {
-        login(token, response.data.user);
+        dispatch(loginUser({ username: response.data.user.username, password: '' })); // ✅ Update Redux
         toast.success(`欢迎, ${response.data.user.username}`);
         navigate('/dashboard');
       })
       .catch(() => {
         toast.error("自动登录失败，请手动登录");
       });
-  }, [token, login, navigate]);
+  }, [token, dispatch, navigate]);
 
   /**
-   * ✅ Handle standard login
+   * ✅ Handle Standard Login (Username/Password)
    */
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,24 +68,28 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/auth/login', { username, password });
-      login(response.data.token, response.data.user);
+      await dispatch(loginUser({ username, password })).unwrap();
       toast.success(`欢迎, ${username}`);
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast.error("登录失败，请检查用户名或密码");
     } finally {
       setLoading(false);
     }
-  }, [username, password, login, navigate]);
+  }, [username, password, dispatch, navigate]);
 
   /**
-   * ✅ Handle WeCom login redirect
+   * ✅ WeCom QR Code Login
    */
   const handleWeComLogin = useCallback(() => {
     const url = `https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=${WECOM_CORP_ID}&agentid=${WECOM_AGENT_ID}&redirect_uri=${REDIRECT_URI}&state=STATE`;
     window.location.href = url;
   }, []);
+
+  // 🔄 Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) navigate('/dashboard');
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">

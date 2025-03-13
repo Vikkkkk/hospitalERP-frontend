@@ -1,5 +1,4 @@
 import React from 'react';
-import { useInventory } from '../context/InventoryContext';
 import InventoryTable from '../components/InventoryTable';
 import InventoryStats from '../components/InventoryStats';
 

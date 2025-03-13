@@ -1,8 +1,10 @@
 import React from 'react';
-import { useInventory } from '../context/InventoryContext';
+import { useSelector } from 'react-redux';
+import { selectInventoryItems } from '../redux/selectors/inventorySelectors';
 
 const InventoryStats: React.FC = () => {
-  const { inventory } = useInventory();
+  // ✅ Get inventory data from Redux store
+  const inventory = useSelector(selectInventoryItems);
 
   const totalItems = inventory.length;
   const lowStockItems = inventory.filter((item) => item.quantity < 5).length;

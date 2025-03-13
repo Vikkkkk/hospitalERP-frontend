@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { requestStockTransfer } from '../services/InventoryService';
-import { useAuth } from '../context/AuthContext';
-import { useInventory } from '../context/InventoryContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
+import { requestStockTransfer } from '../redux/actions/inventoryTransactionActions'; // ✅ Now we will define this action
 import { toast } from 'react-toastify';
 
 const StockRequestForm: React.FC = () => {
-  const { user } = useAuth();
-  const { fetchStockRequests } = useInventory();
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.auth.user); // ✅ Corrected user selector
+  
   const [itemName, setItemName] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -15,14 +16,19 @@ const StockRequestForm: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (!user?.departmentId) {
+      toast.error("❌ You are not assigned to a department.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      await requestStockTransfer(itemName, quantity, user?.departmentid!);
-      toast.success('库存请求已提交！');
-      fetchStockRequests();
+      await dispatch(requestStockTransfer({ itemname: itemName, quantity, departmentId: user.departmentId })).unwrap();
+      toast.success('✅ 库存请求已提交！');
       setItemName('');
       setQuantity(1);
-    } catch (error) {
-      toast.error('库存请求提交失败');
+    } catch (error: any) {
+      toast.error(`❌ 库存请求提交失败: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

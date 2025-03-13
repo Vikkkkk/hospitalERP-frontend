@@ -1,18 +1,18 @@
 export interface InventoryItem {
     id: number;
-    itemname: string;
+    itemname: string;  
     category: string;
-    unit: string;
     quantity: number;
+    unit: string;
+    departmentId?: number; // Optional for warehouse items
+    lastRestocked?: string; // Optional timestamp for restocking
     minimumStockLevel: number;
     restockThreshold: number;
-    supplier?: string;
-    expiryDate?: string | null;
-    purchaseDate?: string | null;
-    departmentId?: number | null;
-    lastRestocked?: string | null;
-    createdAt: string;
-    updatedAt: string;
+    supplier?: string; // Optional field
+    expiryDate?: string; // Optional, stored as a string in frontend
+    purchaseDate?: string; // Optional, stored as a string in frontend
+    createdAt?: string; // Optional, for tracking record creation
+    updatedAt?: string; // Optional, for tracking last update
   }
   
   export interface InventoryState {
@@ -20,4 +20,3 @@ export interface InventoryItem {
     loading: boolean;
     error: string | null;
   }
-  

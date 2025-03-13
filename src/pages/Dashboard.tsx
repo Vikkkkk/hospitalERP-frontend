@@ -1,13 +1,22 @@
-import React, { useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useMemo, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser, selectIsAuthenticated } from '../redux/selectors/authSelectors';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const navigate = useNavigate();
 
-  // ✅ Dynamic Quick Actions based on user role
+  // ✅ Redirect unauthenticated users *before* useMemo is called
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // ✅ Always call useMemo & handle missing user data inside it
   const quickActions = useMemo(() => {
-    if (!user) return [];
-
     const actions: Record<string, string[]> = {
       Admin: ['Manage Users', 'Approve Procurement Requests', 'View Reports'],
       Director: ['Approve Procurements', 'Monitor Inventory', 'Assign Tasks'],
@@ -15,12 +24,14 @@ const Dashboard: React.FC = () => {
       default: ['View Dashboard'],
     };
 
-    return actions[user.role] || actions.default;
+    return user ? actions[user.role] || actions.default : actions.default;
   }, [user]);
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome, {user?.username}!</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-4">
+        Welcome, {user?.username || 'Guest'}!
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ✅ Role Section */}

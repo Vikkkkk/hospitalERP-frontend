@@ -1,37 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useInventory } from '../context/InventoryContext';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import api from '../services/api';
-
-interface InventoryItem {
-  id: number;
-  itemname: string;
-  quantity: number;
-  departmentid: number | null;
-  minimumstocklevel: number;
-}
-
-interface InventoryTransaction {
-  id: number;
-  transactiontype: 'Transfer' | 'Usage' | 'Restocking';
-  quantity: number;
-  performedby: number;
-  createdAt: string;
-}
+import { AppDispatch } from '../redux/store';
+import { fetchInventory, transferInventory } from '../redux/actions/inventoryActions';
+import { fetchInventoryTransactions } from '../redux/actions/inventoryTransactionActions';
+import { selectInventoryItems } from '../redux/selectors/inventorySelectors';
+import { selectTransactions } from '../redux/selectors/inventoryTransactionSelectors';
+import { format } from 'date-fns';
 
 const Inventory: React.FC = () => {
-  const { user } = useAuth();
-  const { inventory, fetchInventory, transactions, fetchTransactions } = useInventory();
+  const dispatch = useDispatch<AppDispatch>();
+  const inventory = useSelector(selectInventoryItems);
+  const transactions = useSelector(selectTransactions);
+
   const [transferItemName, setTransferItemName] = useState('');
   const [transferQuantity, setTransferQuantity] = useState(0);
   const [targetDepartmentId, setTargetDepartmentId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetchInventory();
-    fetchTransactions();
-  }, []);
+    dispatch(fetchInventory());
+    dispatch(fetchInventoryTransactions({ page: 1, limit: 5 }));
+  }, [dispatch]);
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,15 +32,12 @@ const Inventory: React.FC = () => {
     }
 
     try {
-      await api.post('/api/inventory/transfer', {
-        itemName: transferItemName,
-        quantity: transferQuantity,
-        departmentid: targetDepartmentId,
-      });
-
+      await dispatch(
+        transferInventory({ itemName: transferItemName, quantity: transferQuantity, departmentId: targetDepartmentId })
+      ).unwrap();
       toast.success('Stock transferred successfully.');
-      fetchInventory();
-      fetchTransactions();
+      dispatch(fetchInventory());
+      dispatch(fetchInventoryTransactions({ page: 1, limit: 5 }));
       setTransferItemName('');
       setTransferQuantity(0);
       setTargetDepartmentId(null);
@@ -65,54 +52,46 @@ const Inventory: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">📦 Inventory Management</h1>
 
       {/* Transfer Stock Form */}
-      {user?.role === 'Admin' || user?.role === 'WarehouseStaff' ? (
-        <form onSubmit={handleTransfer} className="space-y-4 mb-8">
-          <h2 className="text-xl font-semibold mb-2">🔄 Transfer Stock</h2>
+      <form onSubmit={handleTransfer} className="space-y-4 mb-8">
+        <h2 className="text-xl font-semibold mb-2">🔄 Transfer Stock</h2>
 
-          <div>
-            <label htmlFor="transferItemName" className="block text-gray-700">Item Name</label>
-            <input
-              type="text"
-              id="transferItemName"
-              value={transferItemName}
-              onChange={(e) => setTransferItemName(e.target.value)}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Enter item name"
-            />
-          </div>
+        <div>
+          <label className="block text-gray-700">Item Name</label>
+          <input
+            type="text"
+            value={transferItemName}
+            onChange={(e) => setTransferItemName(e.target.value)}
+            className="w-full p-2 border rounded-lg"
+            placeholder="Enter item name"
+          />
+        </div>
 
-          <div>
-            <label htmlFor="transferQuantity" className="block text-gray-700">Quantity</label>
-            <input
-              type="number"
-              id="transferQuantity"
-              value={transferQuantity}
-              onChange={(e) => setTransferQuantity(Number(e.target.value))}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Enter quantity"
-            />
-          </div>
+        <div>
+          <label className="block text-gray-700">Quantity</label>
+          <input
+            type="number"
+            value={transferQuantity}
+            onChange={(e) => setTransferQuantity(Number(e.target.value))}
+            className="w-full p-2 border rounded-lg"
+            placeholder="Enter quantity"
+          />
+        </div>
 
-          <div>
-            <label htmlFor="targetDepartmentId" className="block text-gray-700">Target Department ID</label>
-            <input
-              type="number"
-              id="targetDepartmentId"
-              value={targetDepartmentId ?? ''}
-              onChange={(e) => setTargetDepartmentId(Number(e.target.value))}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Enter department ID"
-            />
-          </div>
+        <div>
+          <label className="block text-gray-700">Target Department ID</label>
+          <input
+            type="number"
+            value={targetDepartmentId ?? ''}
+            onChange={(e) => setTargetDepartmentId(Number(e.target.value))}
+            className="w-full p-2 border rounded-lg"
+            placeholder="Enter department ID"
+          />
+        </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
-          >
-            Transfer Stock
-          </button>
-        </form>
-      ) : null}
+        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">
+          Transfer Stock
+        </button>
+      </form>
 
       {/* Inventory List */}
       <h2 className="text-xl font-semibold mb-4">📋 Current Inventory</h2>
@@ -122,13 +101,7 @@ const Inventory: React.FC = () => {
             <div key={item.id} className="p-4 bg-gray-100 rounded-lg shadow">
               <h3 className="font-bold text-lg">{item.itemname}</h3>
               <p className="text-gray-700">Quantity: {item.quantity}</p>
-              <p className="text-gray-700">
-                Department ID: {item.departmentid !== null ? item.departmentid : 'Main Warehouse'}
-              </p>
-              <p className="text-gray-700">Minimum Stock Level: {item.minimumstocklevel}</p>
-              {item.quantity < item.minimumstocklevel && (
-                <p className="text-red-500 font-semibold">⚠ Low Stock Alert</p>
-              )}
+              <p className="text-gray-700">Department ID: {item.departmentId ?? 'Main Warehouse'}</p>
             </div>
           ))
         ) : (
@@ -137,60 +110,33 @@ const Inventory: React.FC = () => {
       </div>
 
       {/* Inventory Transactions */}
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-4">🔄 Inventory Transactions</h2>
-        <div className="overflow-x-auto bg-gray-100 p-4 rounded-lg">
-          <table className="w-full table-auto border-collapse">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="p-3 text-left">🆔 ID</th>
-                <th className="p-3 text-left">🔄 Type</th>
-                <th className="p-3 text-left">📦 Quantity</th>
-                <th className="p-3 text-left">👤 Performed By</th>
-                <th className="p-3 text-left">📅 Date</th>
+      <h2 className="text-xl font-semibold mt-10">🔄 Inventory Transactions</h2>
+      <table className="w-full table-auto border-collapse bg-gray-100 p-4 rounded-lg">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="p-3 text-left">🔄 Type</th>
+            <th className="p-3 text-left">📦 Quantity</th>
+            <th className="p-3 text-left">👤 Performed By</th>
+            <th className="p-3 text-left">📅 Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.length > 0 ? (
+            transactions.map((txn) => (
+              <tr key={txn.id} className="border-b">
+                <td className="p-3">{txn.transactiontype}</td>
+                <td className="p-3">{txn.quantity}</td>
+                <td className="p-3">User ID: {txn.performedby || 'N/A'}</td>
+                <td className="p-3">{format(new Date(txn.createdAt), 'yyyy-MM-dd HH:mm')}</td>
               </tr>
-            </thead>
-            <tbody>
-              {transactions.length > 0 ? (
-                transactions.slice((currentPage - 1) * 5, currentPage * 5).map((txn) => (
-                  <tr key={txn.id} className="border-b">
-                    <td className="p-3">{txn.id}</td>
-                    <td className="p-3">{txn.transactiontype}</td>
-                    <td className="p-3">{txn.quantity}</td>
-                    <td className="p-3">{txn.performedby}</td>
-                    <td className="p-3">{new Date(txn.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="p-3 text-center text-gray-500">
-                    ❌ No transactions found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-4 flex justify-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-l-lg"
-            disabled={currentPage === 1}
-          >
-            ◀ Previous
-          </button>
-          <span className="px-4 py-2 bg-white border">{currentPage}</span>
-          <button
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-r-lg"
-            disabled={transactions.length < currentPage * 5}
-          >
-            Next ▶
-          </button>
-        </div>
-      </div>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={4} className="p-3 text-center text-gray-500">❌ No transactions found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };

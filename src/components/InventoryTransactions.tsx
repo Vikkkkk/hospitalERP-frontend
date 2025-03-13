@@ -1,24 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { useInventory } from '../context/InventoryContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchInventoryTransactions } from '../redux/actions/inventoryTransactionActions';
+import { selectTransactions, selectTransactionLoading, selectTransactionError } from '../redux/selectors/inventoryTransactionSelectors';
+import { AppDispatch } from '../redux/store';
 import { format } from 'date-fns';
 
 const InventoryTransactions: React.FC = () => {
-  const { transactions, fetchTransactions } = useInventory();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // ✅ Retrieve Redux state
+  const transactions = useSelector(selectTransactions);
+  const loading = useSelector(selectTransactionLoading);
+  const error = useSelector(selectTransactionError);
+
   const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 10;
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    dispatch(fetchInventoryTransactions({ page: currentPage, limit: transactionsPerPage }));
+  }, [dispatch, currentPage]);
 
   // Pagination logic
-  const indexOfLastTransaction = currentPage * transactionsPerPage;
-  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
-  const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
+  const totalPages = Math.ceil(transactions.length / transactionsPerPage);
+  const currentTransactions = transactions.slice(
+    (currentPage - 1) * transactionsPerPage,
+    currentPage * transactionsPerPage
+  );
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-4">📦 Inventory Transactions</h2>
+
+      {/* Loading & Error Handling */}
+      {loading && <p className="text-blue-500">Loading transactions...</p>}
+      {error && <p className="text-red-500">Error: {error}</p>}
 
       <div className="overflow-x-auto">
         <table className="w-full table-auto border-collapse">
@@ -52,7 +67,7 @@ const InventoryTransactions: React.FC = () => {
       </div>
 
       {/* Pagination Controls */}
-      {transactions.length > transactionsPerPage && (
+      {totalPages > 1 && (
         <div className="mt-4 flex justify-center space-x-2">
           <button
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -61,10 +76,10 @@ const InventoryTransactions: React.FC = () => {
           >
             ⬅ Previous
           </button>
-          <span className="px-4 py-2 border rounded">{currentPage}</span>
+          <span className="px-4 py-2 border rounded">Page {currentPage} of {totalPages}</span>
           <button
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            disabled={indexOfLastTransaction >= transactions.length}
+            disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((prev) => prev + 1)}
           >
             Next ➡

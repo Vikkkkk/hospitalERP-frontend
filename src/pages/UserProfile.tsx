@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from '../services/api';
 import { toast } from 'react-toastify';
+import axios from '../services/api';
+import { selectUser } from '../redux/selectors/authSelectors';
+import { updateUser, logoutUser } from '../redux/actions/authActions';
 
-// ✅ Ensure environment variables exist with fallbacks
 const WECOM_CORP_ID = process.env.REACT_APP_WECOM_CORP_ID || "";
 const WECOM_AGENT_ID = process.env.REACT_APP_WECOM_AGENT_ID || "";
 const BASE_BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://readily-hip-leech.ngrok-free.app/api/wecom-auth";
 
 const UserProfile: React.FC = () => {
-  const { user, logout, updateUser } = useAuth();
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -65,7 +67,7 @@ const UserProfile: React.FC = () => {
       toast.success("WeCom 账号绑定成功");
 
       const updatedUser = { ...user, wecom_userid: wecomUserId };
-      updateUser(updatedUser);
+      dispatch(updateUser(updatedUser) as any); // ✅ Fix Redux Thunk TypeScript error
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
       setLoading(false);
@@ -91,8 +93,8 @@ const UserProfile: React.FC = () => {
 
       toast.success("WeCom 账号解绑成功");
 
-      const updatedUser = { ...user, wecom_userid: null };
-      updateUser(updatedUser);
+      const updatedUser = { ...user, wecom_userid: undefined }; // ✅ Fix null issue
+      dispatch(updateUser(updatedUser) as any); // ✅ Fix Redux Thunk TypeScript error
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
       navigate('/profile');
@@ -130,7 +132,6 @@ const UserProfile: React.FC = () => {
             绑定 WeCom 账号
           </button>
 
-          {/* ✅ Password Input Only If `mode=confirm` */}
           {showPasswordInput && (
             <div className="mt-4">
               <input
@@ -151,6 +152,14 @@ const UserProfile: React.FC = () => {
           )}
         </>
       )}
+
+      {/* ✅ Logout Button */}
+      <button
+        onClick={() => dispatch(logoutUser() as any)} // ✅ Fix Redux Thunk TypeScript error
+        className="mt-6 w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 transition"
+      >
+        退出登录
+      </button>
     </div>
   );
 };

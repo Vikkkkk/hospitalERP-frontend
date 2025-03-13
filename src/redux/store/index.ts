@@ -1,10 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
-import inventoryReducer from './slices/InventorySlice';
-import thunk from 'redux-thunk';
+import inventoryReducer from './slices/inventorySlice';
+import inventoryTransactionReducer from './slices/inventoryTransactionSlice';
+import authReducer from './slices/authSlice'; // ✅ Added
 
 export const store = configureStore({
   reducer: {
     inventory: inventoryReducer,
+    inventoryTransactions: inventoryTransactionReducer,
+    auth: authReducer, // ✅ Now Redux tracks authentication state
   },
 });
 

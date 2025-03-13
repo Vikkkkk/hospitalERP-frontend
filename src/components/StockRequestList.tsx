@@ -1,8 +1,9 @@
 import React from 'react';
-import { useInventory } from '../context/InventoryContext';
+import { useSelector } from 'react-redux';
+import { selectStockRequests } from '../redux/selectors/inventoryTransactionSelectors';
 
 const StockRequestList: React.FC = () => {
-  const { stockRequests } = useInventory();
+  const stockRequests = useSelector(selectStockRequests); // ✅ Fetch from Redux
 
   return (
     <div className="mt-6">
@@ -18,14 +19,20 @@ const StockRequestList: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {stockRequests.map((request) => (
-            <tr key={request.id} className="border">
-              <td className="border p-2">{request.itemName}</td>
-              <td className="border p-2">{request.quantity}</td>
-              <td className="border p-2">{request.departmentId}</td>
-              <td className="border p-2">{request.status}</td>
+          {stockRequests.length > 0 ? (
+            stockRequests.map((request) => (
+              <tr key={request.id} className="border">
+                <td className="border p-2">{request.itemname}</td> {/* ✅ Corrected field name */}
+                <td className="border p-2">{request.quantity}</td>
+                <td className="border p-2">{request.departmentId ?? 'Main Warehouse'}</td> {/* ✅ Handle null */}
+                <td className="border p-2">{request.transactiontype}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={4} className="p-3 text-center text-gray-500">❌ No stock requests found.</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
