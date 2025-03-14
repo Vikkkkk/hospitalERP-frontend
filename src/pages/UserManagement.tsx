@@ -26,6 +26,15 @@ const UserManagement: React.FC = () => {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
+  const permissionLabels: Record<string, string> = {
+    dashboard: '个人主页',
+    inventory: '库存管理',
+    procurement: '采购管理',
+    departments: '部门管理',
+    'user-management': '用户管理',
+  };
+
+
   useEffect(() => {
     dispatch(fetchUsers());
     dispatch(fetchDeletedUsers());
@@ -108,7 +117,7 @@ const UserManagement: React.FC = () => {
       key: 'canAccess',
       render: (canAccess: string[] | undefined) =>
         canAccess && canAccess.length > 0 ? (
-          canAccess.map((perm) => <Tag color="purple" key={perm}>{perm}</Tag>)
+          canAccess.map((perm) => <Tag color="purple" key={perm}>{permissionLabels[perm]}</Tag>)
         ) : (
           <Tag color="red">无权限</Tag>
         ),
@@ -162,7 +171,7 @@ const UserManagement: React.FC = () => {
       key: 'canAccess',
       render: (canAccess: string[] | undefined) =>
         canAccess && canAccess.length > 0 ? (
-          canAccess.map((perm) => <Tag color="purple" key={perm}>{perm}</Tag>)
+          canAccess.map((perm) => <Tag color="purple" key={permissionLabels[perm]}>{perm}</Tag>)
         ) : (
           <Tag color="red">无权限</Tag>
         ),

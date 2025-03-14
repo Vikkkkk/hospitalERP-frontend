@@ -65,10 +65,12 @@ export const updateUser = createAsyncThunk(
 // 🗑️ **Delete User Action (Soft or Hard Delete)**
 export const deleteUser = createAsyncThunk(
   'users/deleteUser',
-  async (userId: number, { rejectWithValue }) => {
+  async (userId: number, { dispatch, rejectWithValue }) => {
     try {
       await api.delete(`/users/${userId}`);
-      return userId; // ✅ Return the ID of the deleted user
+      dispatch(fetchUsers()); // ✅ Ensure UI updates after delete
+      dispatch(fetchDeletedUsers());
+      return userId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete user');
     }
