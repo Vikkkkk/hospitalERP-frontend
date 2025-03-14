@@ -48,12 +48,12 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // ✅ Handle User Edit (Fixing error handling)
+  // ✅ Handle User Edit
   const handleEditUser = async (updatedUserData: any) => {
     try {
       await dispatch(updateUser(updatedUserData)).unwrap();
       message.success('用户信息已更新');
-      dispatch(fetchUsers());
+      dispatch(fetchUsers()); // ✅ Refreshes user list after edit
     } catch (error: any) {
       message.error(error?.message || '更新用户信息失败');
     }
@@ -103,6 +103,17 @@ const UserManagement: React.FC = () => {
         wecom_userid ? <Tag color="blue">已绑定</Tag> : <Tag color="red">未绑定</Tag>,
     },
     {
+      title: '权限',
+      dataIndex: 'canAccess',
+      key: 'canAccess',
+      render: (canAccess: string[] | undefined) =>
+        canAccess && canAccess.length > 0 ? (
+          canAccess.map((perm) => <Tag color="purple" key={perm}>{perm}</Tag>)
+        ) : (
+          <Tag color="red">无权限</Tag>
+        ),
+    },
+    {
       title: '操作',
       key: 'actions',
       render: (text: any, record: any) => (
@@ -144,6 +155,17 @@ const UserManagement: React.FC = () => {
       key: 'departmentName',
       render: (departmentName: string | null, record: any) =>
         departmentName ? `${departmentName} (ID: ${record.departmentId})` : '无',
+    },
+    {
+      title: '权限',
+      dataIndex: 'canAccess',
+      key: 'canAccess',
+      render: (canAccess: string[] | undefined) =>
+        canAccess && canAccess.length > 0 ? (
+          canAccess.map((perm) => <Tag color="purple" key={perm}>{perm}</Tag>)
+        ) : (
+          <Tag color="red">无权限</Tag>
+        ),
     },
     {
       title: '操作',
@@ -197,6 +219,7 @@ const UserManagement: React.FC = () => {
           visible={isEditModalOpen}
           user={selectedUser}
           onClose={() => setEditModalOpen(false)}
+          onSave={handleEditUser}
         />
       )}
     </div>

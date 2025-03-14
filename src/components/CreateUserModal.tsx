@@ -5,6 +5,7 @@ import { AppDispatch } from '../redux/store';
 import { createUser, fetchUsers } from '../redux/actions/userActions'; // ✅ Fetch users after creation
 import { fetchDepartments } from '../redux/actions/departmentActions';
 import { selectDepartments } from '../redux/selectors/departmentSelectors';
+import { MODULES } from '../constants'; // ✅ Import centralized module list
 
 interface CreateUserModalProps {
   visible: boolean;
@@ -33,7 +34,16 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
     try {
       const values = await form.validateFields();
       setLoading(true);
-      await dispatch(createUser(values)).unwrap();
+      
+      const newUser = {
+        username: values.username,
+        password: values.password, // ✅ Only included for creation
+        role: values.role,
+        departmentId: values.departmentId ?? null,
+        canAccess: values.canAccess ?? [], // ✅ Ensure module permissions are included
+      };
+  
+      await dispatch(createUser(newUser)).unwrap();
       message.success('用户创建成功');
       dispatch(fetchUsers()); // ✅ Refresh the user list
       form.resetFields();
@@ -86,6 +96,18 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
             </Select>
           </Form.Item>
         )}
+
+        {/* 🔹 Permissions (Module-Based Access) */}
+        <Form.Item name="canAccess" label="模块访问权限">
+          <Select mode="multiple" placeholder="选择允许访问的模块">
+            {MODULES.map((module) => (
+              <Option key={module.key} value={module.key}>
+                {module.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
       </Form>
     </Modal>
   );

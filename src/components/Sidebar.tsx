@@ -16,10 +16,13 @@ const Sidebar: React.FC = () => {
 
   if (!isAuthenticated || !user) return null; // Hide sidebar if not authenticated
 
-  // ✅ Generate Navigation Links Based on User Access
+  // ✅ Determine Accessible Modules Based on Role and Department
   const navigation = user.isglobalrole
-    ? MODULES // RootAdmin has full access
-    : MODULES.filter((module) => user.canAccess?.includes(module.key));
+    ? MODULES // ✅ RootAdmin has full access
+    : MODULES.filter((module) =>
+        user.canAccess?.includes(module.key) || // ✅ Explicit access via `canAccess`
+        (module.departmentRestricted && module.allowedDepartments?.includes(user.departmentId ?? -1)) // ✅ Restrict by department
+      );
 
   return (
     <aside className={`bg-white shadow-lg h-full transition-all ${isOpen ? "w-64" : "w-20"}`}>
@@ -35,21 +38,25 @@ const Sidebar: React.FC = () => {
         {user.role} Panel
       </div>
 
-      {/* ✅ Navigation Links */}
+      {/* ✅ Navigation Links - Show message if no access */}
       <nav className="flex flex-col p-4 space-y-2">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.key}
-            to={item.path}
-            className={({ isActive }) =>
-              `p-2 flex items-center rounded-lg hover:bg-blue-100 transition ${
-                isActive ? "bg-blue-200 font-bold" : "text-gray-700"
-              }`
-            }
-          >
-            {isOpen ? item.label : <FontAwesomeIcon icon={faBuilding} size="lg" />}
-          </NavLink>
-        ))}
+        {navigation.length > 0 ? (
+          navigation.map((item) => (
+            <NavLink
+              key={item.key}
+              to={item.path}
+              className={({ isActive }) =>
+                `p-2 flex items-center rounded-lg hover:bg-blue-100 transition ${
+                  isActive ? "bg-blue-200 font-bold" : "text-gray-700"
+                }`
+              }
+            >
+              {isOpen ? item.label : <FontAwesomeIcon icon={faBuilding} size="lg" />}
+            </NavLink>
+          ))
+        ) : (
+          <div className="p-2 text-gray-500 text-center">无权限访问</div>
+        )}
       </nav>
 
       {/* ✅ Logout Button */}

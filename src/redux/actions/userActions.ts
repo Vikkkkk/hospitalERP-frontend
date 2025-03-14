@@ -35,14 +35,17 @@ export const fetchDeletedUsers = createAsyncThunk<User[]>('users/fetchDeletedUse
 });
 
 // ✅ **Create New User Action**
-export const createUser = createAsyncThunk<User, Partial<User>>('users/createUser', async (userData, { rejectWithValue }) => {
-  try {
-    const response = await api.post('/users/create', userData);
-    return response.data.user;
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to create user');
+export const createUser = createAsyncThunk(
+  'users/createUser',
+  async (newUser: { username: string; password: string; role: string; departmentId?: number; canAccess?: string[] }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/users/create', newUser);
+      return response.data.user;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create user');
+    }
   }
-});
+);
 
 // 🔄 **Update User Action**
 export const updateUser = createAsyncThunk(

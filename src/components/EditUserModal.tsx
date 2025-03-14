@@ -1,47 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Select, Form, message } from 'antd';
+import { Modal, Select, Form, message, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
-import { updateUser } from '../redux/actions/userActions';
+import { AppDispatch } from '../redux/store';
 import { fetchDepartments } from '../redux/actions/departmentActions';
 import { selectDepartments } from '../redux/selectors/departmentSelectors';
 import { User } from '../redux/store/slices/userSlice';
+import { MODULES } from '../constants'; // ✅ Import centralized module list
 
 interface EditUserModalProps {
   visible: boolean;
   onClose: () => void;
   user: User | null;
+  onSave: (updatedUserData: any) => Promise<void>;
 }
 
 const { Option } = Select;
 
-const EditUserModal: React.FC<EditUserModalProps> = ({ visible, onClose, user }) => {
+const EditUserModal: React.FC<EditUserModalProps> = ({ visible, onClose, user, onSave }) => {
   const dispatch = useDispatch<AppDispatch>();
   const departments = useSelector(selectDepartments);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [isChanged, setIsChanged] = useState(false); // ✅ Track changes
 
-  // ✅ Load departments on modal open
+  // ✅ Fetch Departments on Mount
   useEffect(() => {
-    if (visible) {
-      dispatch(fetchDepartments());
+    dispatch(fetchDepartments());
+  }, [dispatch]);
+
+  // ✅ Reset form when modal opens
+  useEffect(() => {
+    if (visible && user?.id) {
       form.setFieldsValue({
-        role: user?.role,
-        departmentId: user?.departmentId ?? undefined,
+        role: user.role,
+        departmentId: user.departmentId ?? undefined,
+        canAccess: user.canAccess ?? [],
       });
+      setIsChanged(false); // Reset change tracking
     }
-  }, [visible, user, dispatch, form]);
+  }, [visible, user, form]);
 
   // ✅ Handle Save Changes
-  const handleUpdateUser = async () => {
+  const handleSave = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      await dispatch(updateUser({ id: user!.id, ...values })).unwrap();
-      message.success('用户信息更新成功');
+
+      // ✅ Avoid unnecessary API calls if no changes
+      if (
+        values.role === user?.role &&
+        values.departmentId === user?.departmentId &&
+        JSON.stringify(values.canAccess) === JSON.stringify(user?.canAccess)
+      ) {
+        message.info("没有检测到更改"); // No changes detected
+        setLoading(false);
+        return;
+      }
+
+      await onSave({
+        id: user!.id,
+        role: values.role,
+        departmentId: values.departmentId ?? null,
+        canAccess: values.canAccess ?? [],
+      });
+
+      message.success("用户信息更新成功");
       onClose();
-    } catch (error:any) {
-      message.error(error || '更新用户信息失败');
+    } catch (error: any) {
+      message.error(error?.message || "更新用户信息失败");
     } finally {
       setLoading(false);
     }
@@ -52,11 +78,22 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, onClose, user })
       title="编辑用户"
       open={visible}
       onCancel={onClose}
-      onOk={handleUpdateUser}
-      confirmLoading={loading}
+      footer={[
+        <Button key="cancel" onClick={onClose}>
+          取消
+        </Button>,
+        <Button key="save" type="primary" onClick={handleSave} loading={loading} disabled={!isChanged}>
+          保存更改
+        </Button>,
+      ]}
     >
-      <Form form={form} layout="vertical">
-        <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
+      <Form
+        form={form}
+        layout="vertical"
+        onValuesChange={() => setIsChanged(true)} // ✅ Detect changes
+      >
+        {/* Role Selection */}
+        <Form.Item name="role" label="角色" rules={[{ required: true, message: "请选择角色" }]}>
           <Select placeholder="选择角色">
             <Option value="RootAdmin">RootAdmin</Option>
             <Option value="Admin">Admin</Option>
@@ -65,11 +102,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, onClose, user })
           </Select>
         </Form.Item>
 
+        {/* Department Selection */}
         <Form.Item name="departmentId" label="所属部门">
           <Select placeholder="选择部门" allowClear>
             {departments.map((dept) => (
               <Option key={dept.id} value={dept.id}>
                 {dept.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        {/* Permissions (Module Access) */}
+        <Form.Item name="canAccess" label="模块访问权限">
+          <Select mode="multiple" placeholder="选择允许访问的模块">
+            {MODULES.map((module) => (
+              <Option key={module.key} value={module.key}>
+                {module.label}
               </Option>
             ))}
           </Select>
