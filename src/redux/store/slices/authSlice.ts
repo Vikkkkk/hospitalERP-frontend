@@ -7,6 +7,8 @@ interface User {
   role: string;
   wecom_userid?: string;
   departmentId?: number;
+  isglobalrole: boolean; 
+  canAccess: string[]; // ✅ Added canAccess to track user module access
 }
 
 interface AuthState {
@@ -28,11 +30,12 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     loginSuccess(state, action: PayloadAction<User>) {
-      state.user = action.payload;
+      state.user = { ...action.payload, canAccess: action.payload.canAccess || [] }; // ✅ Ensure `canAccess` is initialized
       state.isAuthenticated = true;
       state.error = null;
+      localStorage.setItem('user', JSON.stringify(state.user));
     },
-    logout(state) {  // ✅ Added logout reducer
+    logout(state) {  
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
@@ -48,23 +51,30 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = { ...action.payload, canAccess: action.payload.canAccess || [] }; // ✅ Store `canAccess`
         state.isAuthenticated = true;
+        localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
-        state.user = { ...state.user, ...action.payload };
+        state.user = { 
+          ...state.user, 
+          ...action.payload, 
+          canAccess: action.payload.canAccess || state.user?.canAccess || [] // ✅ Keep existing canAccess if not updated
+        };
         localStorage.setItem('user', JSON.stringify(state.user));
       })
-      .addCase(logoutUser.fulfilled, (state) => { // ✅ Handles async logout
+      .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
       });
   },
 });
 
-export const { loginSuccess, logout } = authSlice.actions; // ✅ Export logout
+export const { loginSuccess, logout } = authSlice.actions;
 export default authSlice.reducer;

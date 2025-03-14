@@ -1,35 +1,28 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, selectIsAuthenticated } from '../redux/selectors/authSelectors';
-import { logoutUser } from '../redux/actions/authActions';
-import { AppDispatch } from '../redux/store';
+import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, selectIsAuthenticated } from "../redux/selectors/authSelectors";
+import { logoutUser } from "../redux/actions/authActions";
+import { AppDispatch } from "../redux/store";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faTimes, faSignOutAlt, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faTimes, faSignOutAlt, faBuilding } from "@fortawesome/free-solid-svg-icons";
+import { MODULES } from "../constants"; // ✅ Import centralized module list
 
 const Sidebar: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector(selectUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  const [isOpen, setIsOpen] = useState(true); // ✅ Sidebar Toggle
+  const [isOpen, setIsOpen] = useState(true);
 
-  if (!isAuthenticated || !user) return null; // Hide sidebar if user isn't logged in
+  if (!isAuthenticated || !user) return null; // Hide sidebar if not authenticated
 
-  // ✅ Define Navigation Items
-  const navigation = [
-    { to: '/dashboard', label: '🏠 Dashboard' },
-    { to: '/profile', label: '👤 User Profile' },
-  ];
-
-  // 🔹 Admin & RootAdmin can access Procurement + Inventory + User Management
-  if (user.role === 'Admin' || user.role === 'RootAdmin') {
-    navigation.push({ to: '/procurement', label: '📑 Procurement Requests' });
-    navigation.push({ to: '/inventory', label: '📦 Inventory Management' });
-    navigation.push({ to: '/user-management', label: '👥 用户管理' }); // ✅ Added User Management Page
-  }
+  // ✅ Generate Navigation Links Based on User Access
+  const navigation = user.isglobalrole
+    ? MODULES // RootAdmin has full access
+    : MODULES.filter((module) => user.canAccess?.includes(module.key));
 
   return (
-    <aside className={`bg-white shadow-lg h-full transition-all ${isOpen ? 'w-64' : 'w-20'}`}>
+    <aside className={`bg-white shadow-lg h-full transition-all ${isOpen ? "w-64" : "w-20"}`}>
       {/* ✅ Sidebar Toggle */}
       <button
         className="p-3 text-gray-700 hover:bg-gray-200 transition w-full flex items-center justify-center"
@@ -38,7 +31,7 @@ const Sidebar: React.FC = () => {
         {isOpen ? <FontAwesomeIcon icon={faTimes} size="lg" /> : <FontAwesomeIcon icon={faBars} size="lg" />}
       </button>
 
-      <div className={`p-4 text-lg font-bold border-b transition-all ${isOpen ? 'block' : 'hidden'}`}>
+      <div className={`p-4 text-lg font-bold border-b transition-all ${isOpen ? "block" : "hidden"}`}>
         {user.role} Panel
       </div>
 
@@ -46,15 +39,15 @@ const Sidebar: React.FC = () => {
       <nav className="flex flex-col p-4 space-y-2">
         {navigation.map((item) => (
           <NavLink
-            key={item.to}
-            to={item.to}
+            key={item.key}
+            to={item.path}
             className={({ isActive }) =>
               `p-2 flex items-center rounded-lg hover:bg-blue-100 transition ${
-                isActive ? 'bg-blue-200 font-bold' : 'text-gray-700'
+                isActive ? "bg-blue-200 font-bold" : "text-gray-700"
               }`
             }
           >
-            {isOpen ? item.label : <FontAwesomeIcon icon={faUsers} size="lg" />}
+            {isOpen ? item.label : <FontAwesomeIcon icon={faBuilding} size="lg" />}
           </NavLink>
         ))}
       </nav>

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Modal, Button, Input, Select, Form, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Input, Select, Form, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
-import { createUser } from '../redux/actions/userActions';
+import { AppDispatch } from '../redux/store';
+import { createUser, fetchUsers } from '../redux/actions/userActions'; // ✅ Fetch users after creation
 import { fetchDepartments } from '../redux/actions/departmentActions';
 import { selectDepartments } from '../redux/selectors/departmentSelectors';
 
@@ -16,12 +16,13 @@ const { Option } = Select;
 const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
   const departments = useSelector(selectDepartments);
-  
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null); // ✅ Role tracking
 
-  // ✅ Fetch departments when the modal opens
-  React.useEffect(() => {
+  // ✅ Fetch departments when modal opens
+  useEffect(() => {
     if (visible) {
       dispatch(fetchDepartments());
     }
@@ -34,9 +35,10 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
       setLoading(true);
       await dispatch(createUser(values)).unwrap();
       message.success('用户创建成功');
+      dispatch(fetchUsers()); // ✅ Refresh the user list
       form.resetFields();
       onClose();
-    } catch (error:any) {
+    } catch (error: any) {
       message.error(error || '创建用户失败');
     } finally {
       setLoading(false);
@@ -61,7 +63,10 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
         </Form.Item>
 
         <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
-          <Select placeholder="选择角色">
+          <Select
+            placeholder="选择角色"
+            onChange={(value) => setSelectedRole(value)} // ✅ Track selected role
+          >
             <Option value="RootAdmin">RootAdmin</Option>
             <Option value="Admin">Admin</Option>
             <Option value="DepartmentHead">DepartmentHead</Option>
@@ -69,15 +74,18 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
           </Select>
         </Form.Item>
 
-        <Form.Item name="departmentId" label="所属部门">
-          <Select placeholder="选择部门">
-            {departments.map((dept) => (
-              <Option key={dept.id} value={dept.id}>
-                {dept.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+        {/* 🔹 Only show `departmentId` if the user is not RootAdmin */}
+        {selectedRole !== 'RootAdmin' && (
+          <Form.Item name="departmentId" label="所属部门">
+            <Select placeholder="选择部门">
+              {departments.map((dept) => (
+                <Option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
       </Form>
     </Modal>
   );

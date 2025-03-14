@@ -5,6 +5,7 @@ export interface User {
     departmentId: number | null;
     isglobalrole: boolean;
     wecom_userid?: string | null;
+    canAccess: string[];
     createdAt: string;
     updatedAt: string;
   }

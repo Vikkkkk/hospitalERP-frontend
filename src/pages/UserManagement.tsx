@@ -1,24 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUsers } from '../redux/actions/userActions';
+import {
+  fetchUsers,
+  fetchDeletedUsers,
+  deleteUser,
+  restoreUser,
+  updateUser,
+} from '../redux/actions/userActions';
 import { selectUsers, selectUsersLoading } from '../redux/selectors/userSelectors';
 import { RootState, AppDispatch } from '../redux/store';
-import { Table, Button, Space, Tag, Spin, message } from 'antd';
+import { Table, Button, Space, Tag, Spin, message, Popconfirm, Tabs } from 'antd';
 import CreateUserModal from '../components/CreateUserModal';
 import EditUserModal from '../components/EditUserModal';
+
+const { TabPane } = Tabs;
 
 const UserManagement: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const users = useSelector(selectUsers);
+  const deletedUsers = useSelector((state: RootState) => state.user.deletedUsers || []);
   const loading = useSelector(selectUsersLoading);
 
   // ✅ Modal Control
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   useEffect(() => {
     dispatch(fetchUsers());
+    dispatch(fetchDeletedUsers());
   }, [dispatch]);
 
   const openEditModal = (user: any) => {
@@ -26,7 +36,43 @@ const UserManagement: React.FC = () => {
     setEditModalOpen(true);
   };
 
-  const columns = [
+  // ✅ Handle User Deletion
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      await dispatch(deleteUser(userId)).unwrap();
+      message.success('用户已删除');
+      dispatch(fetchUsers());
+      dispatch(fetchDeletedUsers());
+    } catch (error: any) {
+      message.error(error?.message || '删除用户失败');
+    }
+  };
+
+  // ✅ Handle User Edit (Fixing error handling)
+  const handleEditUser = async (updatedUserData: any) => {
+    try {
+      await dispatch(updateUser(updatedUserData)).unwrap();
+      message.success('用户信息已更新');
+      dispatch(fetchUsers());
+    } catch (error: any) {
+      message.error(error?.message || '更新用户信息失败');
+    }
+  };
+
+  // 🔄 Restore User
+  const handleRestoreUser = async (userId: number) => {
+    try {
+      await dispatch(restoreUser(userId)).unwrap();
+      message.success('用户已恢复');
+      dispatch(fetchUsers());
+      dispatch(fetchDeletedUsers());
+    } catch (error: any) {
+      message.error(error?.message || '恢复用户失败');
+    }
+  };
+
+  // ✅ Active Users Table Columns
+  const activeColumns = [
     {
       title: '用户名',
       dataIndex: 'username',
@@ -44,9 +90,10 @@ const UserManagement: React.FC = () => {
     },
     {
       title: '部门',
-      dataIndex: 'departmentId',
-      key: 'departmentId',
-      render: (departmentId: number | null) => (departmentId ? `部门 ${departmentId}` : '无'),
+      dataIndex: 'departmentName',
+      key: 'departmentName',
+      render: (departmentName: string | null, record: any) =>
+        departmentName ? `${departmentName} (ID: ${record.departmentId})` : '无',
     },
     {
       title: 'WeCom 绑定',
@@ -61,9 +108,56 @@ const UserManagement: React.FC = () => {
       render: (text: any, record: any) => (
         <Space>
           <Button type="link" onClick={() => openEditModal(record)}>编辑</Button>
-          <Button type="link" danger onClick={() => message.warning('删除功能待实现')}>
-            删除
-          </Button>
+          <Popconfirm
+            title="确定删除此用户？"
+            onConfirm={() => handleDeleteUser(record.id)}
+            okText="是"
+            cancelText="否"
+          >
+            <Button type="link" danger>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  // 🚀 Deleted Users Table Columns
+  const deletedColumns = [
+    {
+      title: '用户名',
+      dataIndex: 'username',
+      key: 'username',
+    },
+    {
+      title: '角色',
+      dataIndex: 'role',
+      key: 'role',
+      render: (role: string) => (
+        <Tag color={role === 'RootAdmin' ? 'volcano' : role === 'Admin' ? 'geekblue' : 'green'}>
+          {role}
+        </Tag>
+      ),
+    },
+    {
+      title: '部门',
+      dataIndex: 'departmentName',
+      key: 'departmentName',
+      render: (departmentName: string | null, record: any) =>
+        departmentName ? `${departmentName} (ID: ${record.departmentId})` : '无',
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      render: (text: any, record: any) => (
+        <Space>
+          <Popconfirm
+            title="确定恢复此用户？"
+            onConfirm={() => handleRestoreUser(record.id)}
+            okText="是"
+            cancelText="否"
+          >
+            <Button type="link" style={{ color: 'green' }}>恢复</Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -74,17 +168,37 @@ const UserManagement: React.FC = () => {
       <h2 className="text-lg font-semibold mb-4">👤 用户管理</h2>
       <Button type="primary" onClick={() => setCreateModalOpen(true)}>+ 添加用户</Button>
 
-      {loading ? (
-        <div className="flex justify-center p-6">
-          <Spin size="large" />
-        </div>
-      ) : (
-        <Table columns={columns} dataSource={users} rowKey="id" className="mt-4" />
-      )}
+      <Tabs defaultActiveKey="1">
+        <TabPane tab="活跃用户" key="1">
+          {loading ? (
+            <div className="flex justify-center p-6">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Table columns={activeColumns} dataSource={users} rowKey="id" className="mt-4" />
+          )}
+        </TabPane>
+
+        <TabPane tab="已删除用户" key="2">
+          {loading ? (
+            <div className="flex justify-center p-6">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Table columns={deletedColumns} dataSource={deletedUsers} rowKey="id" className="mt-4" />
+          )}
+        </TabPane>
+      </Tabs>
 
       {/* Modals */}
       <CreateUserModal visible={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} />
-      {selectedUser && <EditUserModal visible={isEditModalOpen} user={selectedUser} onClose={() => setEditModalOpen(false)} />}
+      {selectedUser && (
+        <EditUserModal
+          visible={isEditModalOpen}
+          user={selectedUser}
+          onClose={() => setEditModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
