@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { loginUser, logoutUser, updateUser } from '../../actions/authActions';
+import { loginUser, logoutUser, updateUser } from '../actions/authActions';
 
 interface User {
   id: number;

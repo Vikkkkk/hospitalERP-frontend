@@ -5,8 +5,8 @@ import {
   assignDepartmentHead,
   updateDepartment,
   deleteDepartment,
-} from '../../actions/departmentActions';
-import { Department } from '../../types/departmentTypes';
+} from '../actions/departmentActions';
+import { Department } from '../types/departmentTypes';
 
 interface DepartmentState {
   departments: Department[];

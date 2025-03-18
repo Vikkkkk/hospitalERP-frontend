@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, Form, message, Button } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch } from '../redux/store';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../redux/hooks'; 
 import { fetchDepartments } from '../redux/actions/departmentActions';
 import { selectDepartments } from '../redux/selectors/departmentSelectors';
-import { User } from '../redux/store/slices/userSlice';
+import { User } from '../redux/slices/userSlice';
 import { MODULES } from '../constants'; // ✅ Import centralized module list
 
 interface EditUserModalProps {
@@ -17,7 +17,7 @@ interface EditUserModalProps {
 const { Option } = Select;
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ visible, onClose, user, onSave }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const departments = useSelector(selectDepartments);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);

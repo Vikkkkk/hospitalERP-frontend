@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Select, message } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../redux/hooks'; 
 import { assignDepartmentHead } from '../redux/actions/departmentActions';
 import { fetchUsers } from '../redux/actions/userActions';
-import { RootState, AppDispatch } from '../redux/store';
+import { selectUsers, selectUsersLoading } from '../redux/selectors/userSelectors'; // ✅ Import your new selectors
 
 interface AssignDepartmentHeadModalProps {
   departmentId: number;
@@ -12,15 +12,16 @@ interface AssignDepartmentHeadModalProps {
 const AssignDepartmentHeadModal: React.FC<AssignDepartmentHeadModalProps> = ({ departmentId }) => {
   const [visible, setVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
-  // ✅ Corrected Redux state reference
-  const { users, loading } = useSelector((state: RootState) => state.user);
+  // ✅ Fetch from selectors
+  const users = useAppSelector(selectUsers);
+  const loading = useAppSelector(selectUsersLoading);
 
-  // ✅ Ensure `users` is not undefined
-  const departmentUsers = users?.filter(
+  // ✅ Filter for this department's users
+  const departmentUsers = users.filter(
     (user) => user.departmentId !== null && user.departmentId === departmentId
-  ) || [];
+  );
 
   useEffect(() => {
     dispatch(fetchUsers());

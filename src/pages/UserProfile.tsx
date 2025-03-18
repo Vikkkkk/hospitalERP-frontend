@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../redux/hooks'; 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from '../services/api';
@@ -12,7 +13,7 @@ const BASE_BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://readily-hi
 
 const UserProfile: React.FC = () => {
   const user = useSelector(selectUser);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
 

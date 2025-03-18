@@ -1,5 +1,16 @@
 .
 ├── README.md
+├── build
+│   ├── asset-manifest.json
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   ├── robots.txt
+│   └── static
+│       ├── css
+│       └── js
 ├── package.json
 ├── postcss.config.js
 ├── project_structure.txt
@@ -15,6 +26,10 @@
 │   ├── App.test.tsx
 │   ├── App.tsx
 │   ├── components
+│   │   ├── AssignDepartmentHeadModal.tsx
+│   │   ├── CreateDepartmentModal.tsx
+│   │   ├── CreateUserModal.tsx
+│   │   ├── EditUserModal.tsx
 │   │   ├── ErrorBoundary.tsx
 │   │   ├── InventoryStats.tsx
 │   │   ├── InventoryTable.tsx
@@ -24,28 +39,30 @@
 │   │   ├── Sidebar.tsx
 │   │   ├── StockRequestForm.tsx
 │   │   └── StockRequestList.tsx
+│   ├── constants.ts
 │   ├── context
-│   │   ├── AuthContext.tsx
-│   │   └── InventoryContext.tsx
+│   │   └── AuthContext.tsx
 │   ├── index.css
 │   ├── index.tsx
 │   ├── logo.svg
 │   ├── pages
 │   │   ├── AdminPanel.tsx
 │   │   ├── Dashboard.tsx
+│   │   ├── DepartmentInventory.tsx
+│   │   ├── DepartmentList.tsx
 │   │   ├── Inventory.tsx
 │   │   ├── InventoryDashboard.tsx
+│   │   ├── InventoryRequest.tsx
 │   │   ├── Login.tsx
 │   │   ├── Procurement.tsx
 │   │   ├── RequestStock.tsx
+│   │   ├── UserManagement.tsx
 │   │   ├── UserProfile.tsx
 │   │   ├── WeComCallback.tsx
 │   │   └── WeComLogin.tsx
 │   ├── react-app-env.d.ts
 │   ├── redux
 │   │   ├── actions
-│   │   ├── constants
-│   │   ├── reducers
 │   │   ├── selectors
 │   │   ├── store
 │   │   └── types
@@ -53,7 +70,9 @@
 │   ├── services
 │   │   ├── AuthService.ts
 │   │   ├── InventoryService.ts
-│   │   └── api.ts
+│   │   ├── NotificationService.ts
+│   │   ├── api.ts
+│   │   └── inventoryRequestService.ts
 │   ├── setupTests.ts
 │   └── types
 │       └── User.ts
@@ -61,4 +80,4 @@
 ├── tsconfig.json
 └── yarn.lock
 
-15 directories, 47 files
+17 directories, 64 files

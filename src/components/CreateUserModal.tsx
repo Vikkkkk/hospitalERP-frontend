@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Select, Form, message } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch } from '../redux/store';
-import { createUser, fetchUsers } from '../redux/actions/userActions'; // ✅ Fetch users after creation
+import { Modal, Input, Select, Form, message, Switch } from 'antd';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../redux/hooks'; 
+import { createUser, fetchUsers } from '../redux/actions/userActions';
 import { fetchDepartments } from '../redux/actions/departmentActions';
 import { selectDepartments } from '../redux/selectors/departmentSelectors';
-import { MODULES } from '../constants'; // ✅ Import centralized module list
+import { MODULES } from '../constants';
+import { UserInput } from '../redux/types/userTypes';
+import { RootState } from '../redux/store'; // For current user access
 
 interface CreateUserModalProps {
   visible: boolean;
@@ -15,41 +17,45 @@ interface CreateUserModalProps {
 const { Option } = Select;
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const departments = useSelector(selectDepartments);
+  const currentUser = useSelector((state: RootState) => state.auth.user); // ✅ Get current user
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null); // ✅ Role tracking
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [isGlobalRole, setIsGlobalRole] = useState(false); // ✅ Global role toggle
 
-  // ✅ Fetch departments when modal opens
+  // ✅ Fetch departments on modal open
   useEffect(() => {
     if (visible) {
       dispatch(fetchDepartments());
     }
   }, [visible, dispatch]);
 
-  // ✅ Handle Form Submission
+  // ✅ Submit handler
   const handleCreateUser = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      
-      const newUser = {
+
+      const newUser: UserInput = {
         username: values.username,
-        password: values.password, // ✅ Only included for creation
+        password: values.password,
         role: values.role,
         departmentId: values.departmentId ?? null,
-        canAccess: values.canAccess ?? [], // ✅ Ensure module permissions are included
+        canAccess: values.canAccess ?? [],
+        isglobalrole: currentUser?.role === 'RootAdmin' ? isGlobalRole : false, // ✅ Controlled by RootAdmin only
       };
-  
+
       await dispatch(createUser(newUser)).unwrap();
-      message.success('用户创建成功');
-      dispatch(fetchUsers()); // ✅ Refresh the user list
+      message.success('✅ 用户创建成功');
+      dispatch(fetchUsers());
       form.resetFields();
+      setIsGlobalRole(false); // Reset toggle
       onClose();
     } catch (error: any) {
-      message.error(error || '创建用户失败');
+      message.error(error || '❌ 创建用户失败');
     } finally {
       setLoading(false);
     }
@@ -75,7 +81,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
         <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
           <Select
             placeholder="选择角色"
-            onChange={(value) => setSelectedRole(value)} // ✅ Track selected role
+            onChange={(value) => setSelectedRole(value)}
           >
             <Option value="RootAdmin">RootAdmin</Option>
             <Option value="Admin">Admin</Option>
@@ -84,9 +90,9 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
           </Select>
         </Form.Item>
 
-        {/* 🔹 Only show `departmentId` if the user is not RootAdmin */}
+        {/* 🔹 Only show department selector for non-RootAdmin */}
         {selectedRole !== 'RootAdmin' && (
-          <Form.Item name="departmentId" label="所属部门">
+          <Form.Item name="departmentId" label="所属部门" rules={[{ required: true, message: '请选择部门' }]}>
             <Select placeholder="选择部门">
               {departments.map((dept) => (
                 <Option key={dept.id} value={dept.id}>
@@ -97,7 +103,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
           </Form.Item>
         )}
 
-        {/* 🔹 Permissions (Module-Based Access) */}
+        {/* 🔹 Module access permissions */}
         <Form.Item name="canAccess" label="模块访问权限">
           <Select mode="multiple" placeholder="选择允许访问的模块">
             {MODULES.map((module) => (
@@ -108,6 +114,12 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose }) =
           </Select>
         </Form.Item>
 
+        {/* 🔹 RootAdmin Global Role Toggle */}
+        {currentUser?.role === 'RootAdmin' && (
+          <Form.Item label="是否为全局角色">
+            <Switch checked={isGlobalRole} onChange={setIsGlobalRole} />
+          </Form.Item>
+        )}
       </Form>
     </Modal>
   );

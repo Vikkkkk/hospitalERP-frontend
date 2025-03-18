@@ -1,75 +1,77 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { User, UserInput } from '../types/userTypes'; // ✅ Use correct type file
 
-// 🛠 Define User Type (Ensure this matches your backend structure)
-export interface User {
-  id: number;
-  username: string;
-  role: string;
-  departmentId: number | null;
-  departmentName?: string; // ✅ Added for department name display
-  isglobalrole: boolean;
-  wecom_userid?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// 🔄 **Fetch Active Users Action**
-export const fetchUsers = createAsyncThunk<User[]>('users/fetchUsers', async (_, { rejectWithValue }) => {
-  try {
-    const response = await api.get('/users'); // ✅ API Call to Fetch Active Users
-    return response.data.users; // ✅ Assuming API returns `{ users: [] }`
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
-  }
-});
-
-// 🔄 **Fetch Soft-Deleted Users Action**
-export const fetchDeletedUsers = createAsyncThunk<User[]>('users/fetchDeletedUsers', async (_, { rejectWithValue }) => {
-  try {
-    const response = await api.get('/users/deleted'); // ✅ Fetch Only Soft-Deleted Users
-    return response.data.users; // ✅ Assuming API returns `{ users: [] }`
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch deleted users');
-  }
-});
-
-// ✅ **Create New User Action**
-export const createUser = createAsyncThunk(
-  'users/createUser',
-  async (newUser: { username: string; password: string; role: string; departmentId?: number; canAccess?: string[] }, { rejectWithValue }) => {
+// 🔄 Fetch Active Users
+export const fetchUsers = createAsyncThunk<User[], void, { rejectValue: string }>(
+  'users/fetchUsers',
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await api.post('/users/create', newUser);
-      return response.data.user;
+      const res = await api.get<{ users: User[] }>('/users');
+      return res.data.users.map(user => ({
+        ...user,
+        canAccess: user.canAccess || [], // ✅ Fallback
+      }));
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
+    }
+  }
+);
+
+// 🔄 Fetch Deleted Users
+export const fetchDeletedUsers = createAsyncThunk<User[], void, { rejectValue: string }>(
+  'users/fetchDeletedUsers',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get<{ users: User[] }>('/users/deleted');
+      return res.data.users.map(user => ({
+        ...user,
+        canAccess: user.canAccess || [],
+      }));
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch deleted users');
+    }
+  }
+);
+
+// ✅ Create User
+export const createUser = createAsyncThunk<User, UserInput, { rejectValue: string }>(
+  'users/createUser',
+  async (newUser, { rejectWithValue }) => {
+    try {
+      const res = await api.post<{ user: User }>('/users/create', newUser);
+      return {
+        ...res.data.user,
+        canAccess: res.data.user.canAccess || [],
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create user');
     }
   }
 );
 
-// 🔄 **Update User Action**
-export const updateUser = createAsyncThunk(
+// ✏️ Update User
+export const updateUser = createAsyncThunk<User, Partial<User>, { rejectValue: string }>(
   'users/updateUser',
-  async (updatedUser: Partial<{ id: number; role: string; departmentId?: number }>, { dispatch, rejectWithValue }) => {
+  async (updatedUser, { rejectWithValue }) => {
     try {
-      const response = await api.patch(`/users/${updatedUser.id}`, updatedUser);
-      await dispatch(fetchUsers()); // ✅ Ensure department updates immediately
-      return response.data.user;
+      const res = await api.patch<{ user: User }>(`/users/${updatedUser.id}`, updatedUser);
+      return {
+        ...res.data.user,
+        canAccess: res.data.user.canAccess || [],
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update user');
     }
   }
 );
 
-
-// 🗑️ **Delete User Action (Soft or Hard Delete)**
-export const deleteUser = createAsyncThunk(
+// 🗑️ Delete User
+export const deleteUser = createAsyncThunk<number, number, { rejectValue: string }>(
   'users/deleteUser',
-  async (userId: number, { dispatch, rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
       await api.delete(`/users/${userId}`);
-      dispatch(fetchUsers()); // ✅ Ensure UI updates after delete
-      dispatch(fetchDeletedUsers());
       return userId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete user');
@@ -77,13 +79,16 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
-// 🔄 **Restore Soft-Deleted User**
-export const restoreUser = createAsyncThunk(
+// ♻️ Restore User
+export const restoreUser = createAsyncThunk<User, number, { rejectValue: string }>(
   'users/restoreUser',
-  async (userId: number, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
-      await api.patch(`/users/${userId}/restore`);
-      return userId; // ✅ Return the restored user ID
+      const res = await api.patch<{ user: User }>(`/users/${userId}/restore`);
+      return {
+        ...res.data.user,
+        canAccess: res.data.user.canAccess || [],
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to restore user');
     }

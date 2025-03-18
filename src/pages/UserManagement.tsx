@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../redux/hooks'; 
 import {
   fetchUsers,
   fetchDeletedUsers,
@@ -16,7 +17,7 @@ import EditUserModal from '../components/EditUserModal';
 const { TabPane } = Tabs;
 
 const UserManagement: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const users = useSelector(selectUsers);
   const deletedUsers = useSelector((state: RootState) => state.user.deletedUsers || []);
   const loading = useSelector(selectUsersLoading);
@@ -28,10 +29,11 @@ const UserManagement: React.FC = () => {
 
   const permissionLabels: Record<string, string> = {
     dashboard: '个人主页',
-    inventory: '库存管理',
     procurement: '采购管理',
     departments: '部门管理',
     'user-management': '用户管理',
+    'main-inventory': '总库存管理',
+    'dept-inventory': '二级库管理',
   };
 
 
@@ -199,27 +201,33 @@ const UserManagement: React.FC = () => {
       <h2 className="text-lg font-semibold mb-4">👤 用户管理</h2>
       <Button type="primary" onClick={() => setCreateModalOpen(true)}>+ 添加用户</Button>
 
-      <Tabs defaultActiveKey="1">
-        <TabPane tab="活跃用户" key="1">
-          {loading ? (
-            <div className="flex justify-center p-6">
-              <Spin size="large" />
-            </div>
-          ) : (
-            <Table columns={activeColumns} dataSource={users} rowKey="id" className="mt-4" />
-          )}
-        </TabPane>
-
-        <TabPane tab="已删除用户" key="2">
-          {loading ? (
-            <div className="flex justify-center p-6">
-              <Spin size="large" />
-            </div>
-          ) : (
-            <Table columns={deletedColumns} dataSource={deletedUsers} rowKey="id" className="mt-4" />
-          )}
-        </TabPane>
-      </Tabs>
+      <Tabs
+          defaultActiveKey="1"
+          items={[
+            {
+              label: '活跃用户',
+              key: '1',
+              children: loading ? (
+                <div className="flex justify-center p-6">
+                  <Spin size="large" />
+                </div>
+              ) : (
+                <Table columns={activeColumns} dataSource={users} rowKey="id" className="mt-4" />
+              ),
+            },
+            {
+              label: '已删除用户',
+              key: '2',
+              children: loading ? (
+                <div className="flex justify-center p-6">
+                  <Spin size="large" />
+                </div>
+              ) : (
+                <Table columns={deletedColumns} dataSource={deletedUsers} rowKey="id" className="mt-4" />
+              ),
+            },
+          ]}
+        />
 
       {/* Modals */}
       <CreateUserModal visible={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} />

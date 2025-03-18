@@ -6,7 +6,8 @@ import { selectIsAuthenticated, selectUser } from './redux/selectors/authSelecto
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Procurement from './pages/Procurement';
-import Inventory from './pages/Inventory';
+import MainInventory from './pages/MainInventory';
+import DepartmentInventory from './pages/DepartmentInventory';
 import WeComLogin from './pages/WeComLogin';
 import WeComCallback from './pages/WeComCallback';
 import UserProfile from './pages/UserProfile';
@@ -62,7 +63,8 @@ const App: React.FC = () => {
                 <Route path="/" element={<ProtectedRoute element={<Dashboard />} />} />
                 <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
                 <Route path="/procurement" element={<ProtectedRoute element={<Procurement />} />} />
-                <Route path="/inventory" element={<ProtectedRoute element={<Inventory />} />} />
+                <Route path="/maininventory" element={<ProtectedRoute element={<MainInventory />} />} />
+                <Route path="/deptinventory" element={<ProtectedRoute element={<DepartmentInventory />} />} />
                 <Route path="/profile" element={<ProtectedRoute element={<UserProfile />} />} />
 
                 {/* 🔹 Department Management (Only Admin & RootAdmin) */}

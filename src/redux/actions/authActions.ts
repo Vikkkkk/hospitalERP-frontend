@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { loginSuccess, logout } from '../store/slices/authSlice';
+import { loginSuccess, logout } from '../slices/authSlice';
 
 const API_URL = '/auth'; // Base URL handled by `api.ts`
 

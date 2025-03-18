@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../redux/hooks'; 
 import { loginUser } from '../redux/actions/authActions';
 import { selectIsAuthenticated } from '../redux/selectors/authSelectors';
-import { AppDispatch } from '../redux/store';
 import { toast } from 'react-toastify';
 import axios from '../services/api';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ const REDIRECT_URI = encodeURIComponent(
 );
 
 const Login: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isAuthenticated = useSelector(selectIsAuthenticated);

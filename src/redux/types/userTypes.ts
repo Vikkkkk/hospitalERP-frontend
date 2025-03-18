@@ -15,3 +15,14 @@ export interface User {
     loading: boolean;
     error: string | null;
   }
+
+
+  // UserInput type: only fields needed when creating
+export interface UserInput {
+  username: string;
+  password: string;
+  role: string;
+  departmentId?: number;
+  canAccess?: string[];
+  isglobalrole?: boolean;
+}

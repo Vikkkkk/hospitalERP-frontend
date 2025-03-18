@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+import { useAppDispatch } from '../redux/hooks'; 
 import { requestStockTransfer } from '../redux/actions/inventoryTransactionActions'; // ✅ Now we will define this action
 import { toast } from 'react-toastify';
 
 const StockRequestForm: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const user = useSelector((state: RootState) => state.auth.user); // ✅ Corrected user selector
   
   const [itemName, setItemName] = useState('');

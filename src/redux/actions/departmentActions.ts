@@ -12,7 +12,7 @@ export const fetchDepartments = createAsyncThunk<Department[], void>(
       const response = await api.get(API_URL);
       return response.data.departments;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch departments');
+      return rejectWithValue(error.response?.data?.message || '无法获取部门列表');
     }
   }
 );

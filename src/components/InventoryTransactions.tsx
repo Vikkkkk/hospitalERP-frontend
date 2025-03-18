@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { fetchInventoryTransactions } from '../redux/actions/inventoryTransactionActions';
 import { selectTransactions, selectTransactionLoading, selectTransactionError } from '../redux/selectors/inventoryTransactionSelectors';
-import { AppDispatch } from '../redux/store';
+import { useAppDispatch } from '../redux/hooks'; 
 import { format } from 'date-fns';
 
 const InventoryTransactions: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   // ✅ Retrieve Redux state
   const transactions = useSelector(selectTransactions);

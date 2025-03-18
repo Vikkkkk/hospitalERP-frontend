@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Modal, Button, Input } from 'antd';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../redux/hooks';  // ✅ Exact file path
 import { createDepartment } from '../redux/actions/departmentActions';
-import { AppDispatch } from '../redux/store';
 
 const CreateDepartmentModal: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [name, setName] = useState('');
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   const handleCreate = () => {
     if (name) {
