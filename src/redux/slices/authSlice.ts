@@ -7,8 +7,13 @@ interface User {
   role: string;
   wecom_userid?: string;
   departmentId?: number;
-  isglobalrole: boolean; 
-  canAccess: string[]; // ✅ Added canAccess to track user module access
+  isglobalrole: boolean;
+  permissions: {
+    [module: string]: {
+      read: boolean;
+      write: boolean;
+    };
+  };
 }
 
 interface AuthState {
@@ -30,12 +35,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     loginSuccess(state, action: PayloadAction<User>) {
-      state.user = { ...action.payload, canAccess: action.payload.canAccess || [] }; // ✅ Ensure `canAccess` is initialized
+      state.user = {
+        ...action.payload,
+        permissions: action.payload.permissions || {}, // ✅ Ensure permissions initialized
+      };
       state.isAuthenticated = true;
       state.error = null;
       localStorage.setItem('user', JSON.stringify(state.user));
     },
-    logout(state) {  
+    logout(state) {
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
@@ -51,7 +59,10 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
-        state.user = { ...action.payload, canAccess: action.payload.canAccess || [] }; // ✅ Store `canAccess`
+        state.user = {
+          ...action.payload,
+          permissions: action.payload.permissions || {}, // ✅ Store permissions
+        };
         state.isAuthenticated = true;
         localStorage.setItem('user', JSON.stringify(state.user));
       })
@@ -59,13 +70,15 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(updateUser.fulfilled, (state, action) => {
-        state.user = { 
-          ...state.user, 
-          ...action.payload, 
-          canAccess: action.payload.canAccess || state.user?.canAccess || [] // ✅ Keep existing canAccess if not updated
-        };
-        localStorage.setItem('user', JSON.stringify(state.user));
+      .addCase(updateUser.fulfilled, (state, action: PayloadAction<Partial<User>>) => {
+        if (state.user) {
+          state.user = {
+            ...state.user,
+            ...action.payload,
+            permissions: action.payload.permissions || state.user.permissions || {}, // ✅ Preserve or update permissions
+          };
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;

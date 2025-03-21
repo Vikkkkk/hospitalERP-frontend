@@ -16,8 +16,18 @@ export const selectUsersError = (state: RootState) => state.user.error;
 export const selectUserById = (state: RootState, userId: number) =>
   state.user.users.find((user) => user.id === userId);
 
-// ✅ User Access Permissions
+// ✅ User Access Permissions (Full Record)
 export const selectUserPermissions = (state: RootState, userId: number) => {
   const user = state.user.users.find((u) => u.id === userId);
-  return user ? user.canAccess : [];
+  return user ? user.permissions : {};
+};
+
+// ✅ Extract Read/Write Access for Specific Module
+export const selectUserModuleAccess = (
+  state: RootState,
+  userId: number,
+  moduleKey: string
+): { read: boolean; write: boolean } => {
+  const user = state.user.users.find((u) => u.id === userId);
+  return user?.permissions?.[moduleKey] || { read: false, write: false };
 };

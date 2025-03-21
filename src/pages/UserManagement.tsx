@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAppDispatch } from '../redux/hooks'; 
+import { useAppDispatch } from '../redux/hooks';
 import {
   fetchUsers,
   fetchDeletedUsers,
@@ -9,12 +9,11 @@ import {
   updateUser,
 } from '../redux/actions/userActions';
 import { selectUsers, selectUsersLoading } from '../redux/selectors/userSelectors';
-import { RootState, AppDispatch } from '../redux/store';
+import { RootState } from '../redux/store';
 import { Table, Button, Space, Tag, Spin, message, Popconfirm, Tabs } from 'antd';
 import CreateUserModal from '../components/CreateUserModal';
 import EditUserModal from '../components/EditUserModal';
-
-const { TabPane } = Tabs;
+import { MODULES } from '../constants';
 
 const UserManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,7 +21,6 @@ const UserManagement: React.FC = () => {
   const deletedUsers = useSelector((state: RootState) => state.user.deletedUsers || []);
   const loading = useSelector(selectUsersLoading);
 
-  // ✅ Modal Control
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -36,7 +34,6 @@ const UserManagement: React.FC = () => {
     'dept-inventory': '二级库管理',
   };
 
-
   useEffect(() => {
     dispatch(fetchUsers());
     dispatch(fetchDeletedUsers());
@@ -47,7 +44,6 @@ const UserManagement: React.FC = () => {
     setEditModalOpen(true);
   };
 
-  // ✅ Handle User Deletion
   const handleDeleteUser = async (userId: number) => {
     try {
       await dispatch(deleteUser(userId)).unwrap();
@@ -59,18 +55,16 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // ✅ Handle User Edit
   const handleEditUser = async (updatedUserData: any) => {
     try {
       await dispatch(updateUser(updatedUserData)).unwrap();
       message.success('用户信息已更新');
-      dispatch(fetchUsers()); // ✅ Refreshes user list after edit
+      dispatch(fetchUsers());
     } catch (error: any) {
       message.error(error?.message || '更新用户信息失败');
     }
   };
 
-  // 🔄 Restore User
   const handleRestoreUser = async (userId: number) => {
     try {
       await dispatch(restoreUser(userId)).unwrap();
@@ -82,8 +76,24 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // ✅ Active Users Table Columns
-  const activeColumns = [
+  const renderPermissions = (permissions: Record<string, { read: boolean; write: boolean }>) => {
+    if (!permissions || Object.keys(permissions).length === 0) {
+      return <Tag color="red">无权限</Tag>;
+    }
+
+    return Object.entries(permissions).map(([key, perms]) => {
+      const label = permissionLabels[key] || key;
+      const accessLevel = perms.write ? '读写' : '只读';
+      const color = perms.write ? 'purple' : 'blue';
+      return (
+        <Tag color={color} key={key}>
+          {label} ({accessLevel})
+        </Tag>
+      );
+    });
+  };
+
+  const commonColumns = [
     {
       title: '用户名',
       dataIndex: 'username',
@@ -106,6 +116,10 @@ const UserManagement: React.FC = () => {
       render: (departmentName: string | null, record: any) =>
         departmentName ? `${departmentName} (ID: ${record.departmentId})` : '无',
     },
+  ];
+
+  const activeColumns = [
+    ...commonColumns,
     {
       title: 'WeCom 绑定',
       dataIndex: 'wecom_userid',
@@ -115,73 +129,45 @@ const UserManagement: React.FC = () => {
     },
     {
       title: '权限',
-      dataIndex: 'canAccess',
-      key: 'canAccess',
-      render: (canAccess: string[] | undefined) =>
-        canAccess && canAccess.length > 0 ? (
-          canAccess.map((perm) => <Tag color="purple" key={perm}>{permissionLabels[perm]}</Tag>)
-        ) : (
-          <Tag color="red">无权限</Tag>
-        ),
+      dataIndex: 'permissions',
+      key: 'permissions',
+      render: renderPermissions,
     },
     {
       title: '操作',
       key: 'actions',
-      render: (text: any, record: any) => (
+      render: (_: any, record: any) => (
         <Space>
-          <Button type="link" onClick={() => openEditModal(record)}>编辑</Button>
+          <Button type="link" onClick={() => openEditModal(record)}>
+            编辑
+          </Button>
           <Popconfirm
             title="确定删除此用户？"
             onConfirm={() => handleDeleteUser(record.id)}
             okText="是"
             cancelText="否"
           >
-            <Button type="link" danger>删除</Button>
+            <Button type="link" danger>
+              删除
+            </Button>
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
-  // 🚀 Deleted Users Table Columns
   const deletedColumns = [
-    {
-      title: '用户名',
-      dataIndex: 'username',
-      key: 'username',
-    },
-    {
-      title: '角色',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role: string) => (
-        <Tag color={role === 'RootAdmin' ? 'volcano' : role === 'Admin' ? 'geekblue' : 'green'}>
-          {role}
-        </Tag>
-      ),
-    },
-    {
-      title: '部门',
-      dataIndex: 'departmentName',
-      key: 'departmentName',
-      render: (departmentName: string | null, record: any) =>
-        departmentName ? `${departmentName} (ID: ${record.departmentId})` : '无',
-    },
+    ...commonColumns,
     {
       title: '权限',
-      dataIndex: 'canAccess',
-      key: 'canAccess',
-      render: (canAccess: string[] | undefined) =>
-        canAccess && canAccess.length > 0 ? (
-          canAccess.map((perm) => <Tag color="purple" key={permissionLabels[perm]}>{perm}</Tag>)
-        ) : (
-          <Tag color="red">无权限</Tag>
-        ),
+      dataIndex: 'permissions',
+      key: 'permissions',
+      render: renderPermissions,
     },
     {
       title: '操作',
       key: 'actions',
-      render: (text: any, record: any) => (
+      render: (_: any, record: any) => (
         <Space>
           <Popconfirm
             title="确定恢复此用户？"
@@ -189,7 +175,9 @@ const UserManagement: React.FC = () => {
             okText="是"
             cancelText="否"
           >
-            <Button type="link" style={{ color: 'green' }}>恢复</Button>
+            <Button type="link" style={{ color: 'green' }}>
+              恢复
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -199,35 +187,37 @@ const UserManagement: React.FC = () => {
   return (
     <div className="p-4 bg-white shadow rounded">
       <h2 className="text-lg font-semibold mb-4">👤 用户管理</h2>
-      <Button type="primary" onClick={() => setCreateModalOpen(true)}>+ 添加用户</Button>
+      <Button type="primary" onClick={() => setCreateModalOpen(true)}>
+        + 添加用户
+      </Button>
 
       <Tabs
-          defaultActiveKey="1"
-          items={[
-            {
-              label: '活跃用户',
-              key: '1',
-              children: loading ? (
-                <div className="flex justify-center p-6">
-                  <Spin size="large" />
-                </div>
-              ) : (
-                <Table columns={activeColumns} dataSource={users} rowKey="id" className="mt-4" />
-              ),
-            },
-            {
-              label: '已删除用户',
-              key: '2',
-              children: loading ? (
-                <div className="flex justify-center p-6">
-                  <Spin size="large" />
-                </div>
-              ) : (
-                <Table columns={deletedColumns} dataSource={deletedUsers} rowKey="id" className="mt-4" />
-              ),
-            },
-          ]}
-        />
+        defaultActiveKey="1"
+        items={[
+          {
+            label: '活跃用户',
+            key: '1',
+            children: loading ? (
+              <div className="flex justify-center p-6">
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Table columns={activeColumns} dataSource={users} rowKey="id" className="mt-4" />
+            ),
+          },
+          {
+            label: '已删除用户',
+            key: '2',
+            children: loading ? (
+              <div className="flex justify-center p-6">
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Table columns={deletedColumns} dataSource={deletedUsers} rowKey="id" className="mt-4" />
+            ),
+          },
+        ]}
+      />
 
       {/* Modals */}
       <CreateUserModal visible={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} />

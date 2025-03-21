@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { User, UserInput } from '../types/userTypes'; // ✅ Use correct type file
+import { User, UserInput } from '../types/userTypes';
 
 // 🔄 Fetch Active Users
 export const fetchUsers = createAsyncThunk<User[], void, { rejectValue: string }>(
@@ -8,10 +8,7 @@ export const fetchUsers = createAsyncThunk<User[], void, { rejectValue: string }
   async (_, { rejectWithValue }) => {
     try {
       const res = await api.get<{ users: User[] }>('/users');
-      return res.data.users.map(user => ({
-        ...user,
-        canAccess: user.canAccess || [], // ✅ Fallback
-      }));
+      return res.data.users;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
     }
@@ -24,10 +21,7 @@ export const fetchDeletedUsers = createAsyncThunk<User[], void, { rejectValue: s
   async (_, { rejectWithValue }) => {
     try {
       const res = await api.get<{ users: User[] }>('/users/deleted');
-      return res.data.users.map(user => ({
-        ...user,
-        canAccess: user.canAccess || [],
-      }));
+      return res.data.users;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch deleted users');
     }
@@ -40,10 +34,7 @@ export const createUser = createAsyncThunk<User, UserInput, { rejectValue: strin
   async (newUser, { rejectWithValue }) => {
     try {
       const res = await api.post<{ user: User }>('/users/create', newUser);
-      return {
-        ...res.data.user,
-        canAccess: res.data.user.canAccess || [],
-      };
+      return res.data.user;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create user');
     }
@@ -56,10 +47,7 @@ export const updateUser = createAsyncThunk<User, Partial<User>, { rejectValue: s
   async (updatedUser, { rejectWithValue }) => {
     try {
       const res = await api.patch<{ user: User }>(`/users/${updatedUser.id}`, updatedUser);
-      return {
-        ...res.data.user,
-        canAccess: res.data.user.canAccess || [],
-      };
+      return res.data.user;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update user');
     }
@@ -85,10 +73,7 @@ export const restoreUser = createAsyncThunk<User, number, { rejectValue: string 
   async (userId, { rejectWithValue }) => {
     try {
       const res = await api.patch<{ user: User }>(`/users/${userId}/restore`);
-      return {
-        ...res.data.user,
-        canAccess: res.data.user.canAccess || [],
-      };
+      return res.data.user;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to restore user');
     }

@@ -22,12 +22,15 @@ const Sidebar: React.FC = () => {
     // ✅ Load stored module order from localStorage
     const storedOrder = localStorage.getItem("sidebarOrder");
     let sortedModules = user.isglobalrole
-      ? MODULES
-      : MODULES.filter(
-          (module) =>
-            user.canAccess?.includes(module.key) ||
-            (!module.departmentRestricted || module.allowedDepartments?.includes(user.departmentId ?? -1))
-        );
+  ? MODULES
+  : MODULES.filter((module) => {
+      const userPerms = user.permissions?.[module.key];
+      const hasReadAccess = userPerms?.read === true;
+
+      const deptAllowed = !module.departmentRestricted || module.allowedDepartments?.includes(user.departmentId ?? -1);
+
+      return hasReadAccess && deptAllowed;
+    });
 
     if (storedOrder) {
       const storedKeys = JSON.parse(storedOrder) as string[];

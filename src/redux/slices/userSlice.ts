@@ -8,7 +8,7 @@ import {
   restoreUser,
 } from '../actions/userActions';
 
-// 🛠 User Type
+// 🛠 Updated User Type with Permissions
 export interface User {
   id: number;
   username: string;
@@ -17,7 +17,12 @@ export interface User {
   departmentName?: string;
   isglobalrole: boolean;
   wecom_userid?: string | null;
-  canAccess: string[];
+  permissions: {
+    [module: string]: {
+      read: boolean;
+      write: boolean;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }
